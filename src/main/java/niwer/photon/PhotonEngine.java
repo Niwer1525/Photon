@@ -26,12 +26,13 @@ import niwer.photon.sql.PlayerAccountTable;
 import niwer.photon.sql.PurchaseTable;
 import niwer.photon.sql.ServerTable;
 import niwer.photon.sql.SubscriptionTable;
-import niwer.photon.util.DatabaseBackupManager;
 import niwer.photon.util.PhotonLogTypes;
 import niwer.photon.util.TranslationManager;
 import niwer.photon.util.stripe.StripeStartupSync;
 import niwer.photon.web.WebServerEngine;
 import niwer.queryon.DataBase;
+import niwer.queryon.SchemaPrunePolicy;
+import niwer.queryon.backup.DatabaseBackupManager;
 
 /**
  * Main entry point. This class is responsible for initializing stuff, loading features, registering database tables, starting the Discord bot, and launching the web API and server.
@@ -127,9 +128,19 @@ public class PhotonEngine {
             .registerTable(PlayerAccountTable.class)
             .registerTable(ServerTable.class)
         ;
+        DATA_BASE.setPrunePolicy(SchemaPrunePolicy.PRUNE_ALL);
 
         /* Run the database backup system */
-        DatabaseBackupManager.start();
+        if(Directories.getConfig().database_backup_enabled) {
+            final DatabaseBackupManager BACKUP_MANAGER = DatabaseBackupManager.createWithScheduler(DATA_BASE, Directories.BACKUPS_DIR, 
+                Directories.getConfig().dbBackupFilePrefix(),
+                (int)Directories.getConfig().database_backup_retention_days,
+                Directories.getConfig().database_backup_interval_minutes
+            );
+            if(Directories.getConfig().database_backup_on_startup) BACKUP_MANAGER.createBackup("startup-backup");
+        }
+
+        DATA_BASE.syncSchema(); // We're syncing the schema after the backup to ensure that the backup to avoid losing data.
 
         /* Repopulate Stripe data on startup */
         StripeStartupSync.load();

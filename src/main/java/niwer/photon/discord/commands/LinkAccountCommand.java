@@ -32,14 +32,14 @@ public class LinkAccountCommand extends AbstractSlashCommand {
         }
 
         /* Check if there's an account with this UUID */
-        final ObjectUserAccount profile = PlayerAccountTable.getAccountByUUID(UUID);
-        if (profile == null) {
+        final ObjectUserAccount PROFILE = PlayerAccountTable.getAccountByUUID(UUID);
+        if (PROFILE == null) {
             event.reply(TranslationManager.format(event.getUser().getId(), "command.link_account.failure.no_uuid")).setEphemeral(true).queue();
             return;
         }
 
         /* Check if the account has already been linked */
-        if (profile.hasDiscordLinked()) {
+        if (PROFILE.hasDiscordLinked()) {
             event.reply(TranslationManager.format(event.getUser().getId(), "command.link_account.failure.already_linked")).setEphemeral(true).queue();
             return;
         }

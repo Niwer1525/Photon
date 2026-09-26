@@ -6,6 +6,7 @@ import java.util.Map;
 
 import javax.annotation.Nonnull;
 
+import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -24,6 +25,7 @@ public class CommandsManager extends ListenerAdapter {
         /* Private message and Guild commands */
         new LinkAccountCommand().register();
         new LanguageCommand().register();
+        new CreateAccountCommand().register();
 
         /* Guild only commands */
         new ClearCommand().register();
@@ -46,12 +48,38 @@ public class CommandsManager extends ListenerAdapter {
      * @param event The event that triggered this command
      * @author Mini
      */
-    public static void onSlashCommand(SlashCommandInteractionEvent event) {
-        final String name = event.getName();
-        final AbstractSlashCommand command = COMMANDS.get(name);
-        if(command != null) {
-            command.handle(event);
-            return;
+    @Override 
+    public void onSlashCommandInteraction(@Nonnull SlashCommandInteractionEvent event) {
+        try {
+            final String name = event.getName();
+            final AbstractSlashCommand command = COMMANDS.get(name);
+            if(command != null) {
+                command.handle(event);
+                return;
+            }
+        } catch (Exception e) {
+            event.reply("An error occurred while processing your request.").setEphemeral(true).queue();
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Handle modals
+     * 
+     * @param event The event that triggered this command
+     */
+    @Override 
+    public void onModalInteraction(@Nonnull ModalInteractionEvent event) {
+        try {
+            final String MODAL_ID = event.getModalId();
+            final AbstractModalCommand COMMAND = COMMANDS.values().stream().filter(cmd -> cmd instanceof AbstractModalCommand modalCmd && modalCmd.modalId().equals(MODAL_ID)).map(cmd -> (AbstractModalCommand) cmd).findFirst().orElse(null);
+            if(COMMAND != null) {
+                COMMAND.handleForm(event);
+                return;
+            }
+        } catch (Exception e) {
+            event.reply("An error occurred while processing your request.").setEphemeral(true).queue();
+            e.printStackTrace();
         }
     }
 

@@ -112,6 +112,20 @@ public class PlayerAccountTable extends Table {
     }
 
     /**
+     * Check if a Discord user is already registered.
+     * 
+     * @param discordID The Discord ID to check
+     * @return true if the user is already registered, false otherwise
+     */
+    public static boolean discordExists(long discordId) {
+        final String DISCORD_ID_STR = String.valueOf(discordId);
+        final Integer COUNT = SelectionManager.select(PhotonEngine.DATA_BASE, PlayerAccountTable.class, "COUNT(*) as count")
+            .where(Expression.of("LOWER(discordID)").isEqualTo(DISCORD_ID_STR))
+            .executePrimitive(Integer.class);
+        return COUNT != null && COUNT > 0;
+    }
+
+    /**
      * Update language preferences for a user by UUID.
      * 
      * @param uuid The unique identifier of the user

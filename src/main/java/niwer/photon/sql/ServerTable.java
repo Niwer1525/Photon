@@ -44,8 +44,7 @@ public class ServerTable extends Table {
                 .where(Expression.of("server_port").isEqualTo(server.serverPort))
                 .execute();
         } else {
-            InsertionManager.insert(PhotonEngine.DATA_BASE, ServerTable.class, 
-                "server_name", "server_motd", "server_ip", "server_port", "queue_port", "last_seen_at", "site_url", "discord")
+            InsertionManager.insert(PhotonEngine.DATA_BASE, ServerTable.class, server)
                 .row(server.serverName, server.serverMOTD, server.serverIP, server.serverPort, server.queuePort, now, server.site, server.discord)
                 .execute();
         }

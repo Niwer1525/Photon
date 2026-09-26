@@ -41,8 +41,7 @@ Photon is configured via a JSON file : `network/config.json`, which contains set
 
 - **Licenses**
 	- `products` is a list of products available when creating a license. Each entry contains an `id`, display `name`, optional `default_license_duration_days`, and Stripe `stripe_price_ids`.
-	- Example: `"products": [{"id": "niwer-engine", "name": "Niwer Engine", "default_license_duration_days": 30, "stripe_price_ids": ["price_123"], "is_subscription": true, "repo_owner": "niwer", "repo_name": "engine", "excluded_release_tags": ["v1.0.0"]}]`
-	- Photon retrieves Checkout Session line items from Stripe and matches their Price ID against `stripe_price_ids`. Product metadata is not used.
+	- Photon retrieves Checkout Session line items from Stripe and matches their Price ID against `stripe_price_ids`.
 
 ## Endpoints
 

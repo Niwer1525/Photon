@@ -23,6 +23,11 @@ public class LanguageCommand extends AbstractSlashCommand {
     }
 
     @Override
+    public boolean isGlobal() {
+        return true;
+    }
+
+    @Override
     public void handle(SlashCommandInteractionEvent event) {
         final OptionMapping LANGUAGE_ARG = event.getOption("language");
         final var LANGUAGE = Language.fromString(LANGUAGE_ARG.getAsString());

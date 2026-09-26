@@ -7,6 +7,7 @@ import javax.annotation.Nonnull;
 import javax.security.auth.login.LoginException;
 
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.audit.AuditLogEntry;
 import net.dv8tion.jda.api.entities.Activity;
@@ -19,7 +20,6 @@ import net.dv8tion.jda.api.events.guild.GuildBanEvent;
 import net.dv8tion.jda.api.events.guild.GuildReadyEvent;
 import net.dv8tion.jda.api.events.guild.GuildUnbanEvent;
 import net.dv8tion.jda.api.events.guild.member.update.GuildMemberUpdateTimeOutEvent;
-import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
 import net.dv8tion.jda.api.events.session.ReadyEvent;
@@ -41,7 +41,7 @@ import niwer.photon.util.PhotonLogTypes;
 @SuppressWarnings("null") // The compiler in Photon is not good at handling JDA's @Nonnull annotations, so we suppress null warnings in this class
 public class BotEngine extends ListenerAdapter {
 
-    private static JDABuilder botBuilder;
+    private static JDA bot;
     private static boolean isRestarting = false;
 
     public static Guild guild;
@@ -60,16 +60,16 @@ public class BotEngine extends ListenerAdapter {
                 /* Try to silence JDA logs */
                 PhotonLogTypes.silenceLogsFor("net.dv8tion.jda");
                 
-                botBuilder = JDABuilder.createDefault(Directories.getConfig().discord_bot_token);
-                botBuilder.setActivity(Activity.playing(Directories.getConfig().bot_activity));
-                botBuilder.addEventListeners(new BotEngine());
-                botBuilder.addEventListeners(new CommandsManager());
-                botBuilder.enableIntents(GatewayIntent.MESSAGE_CONTENT);
-                botBuilder.enableIntents(GatewayIntent.GUILD_MEMBERS);
-                botBuilder.enableIntents(GatewayIntent.GUILD_PRESENCES);
-                botBuilder.enableIntents(GatewayIntent.GUILD_MODERATION);
-                botBuilder.setMemberCachePolicy(MemberCachePolicy.ALL);
-                botBuilder.build();
+                final JDABuilder BUILDER = JDABuilder.createDefault(Directories.getConfig().discord_bot_token);
+                BUILDER.setActivity(Activity.playing(Directories.getConfig().bot_activity));
+                BUILDER.addEventListeners(new BotEngine());
+                BUILDER.addEventListeners(new CommandsManager());
+                BUILDER.enableIntents(GatewayIntent.MESSAGE_CONTENT);
+                BUILDER.enableIntents(GatewayIntent.GUILD_MEMBERS);
+                BUILDER.enableIntents(GatewayIntent.GUILD_PRESENCES);
+                BUILDER.enableIntents(GatewayIntent.GUILD_MODERATION);
+                BUILDER.setMemberCachePolicy(MemberCachePolicy.ALL);
+                bot = BUILDER.build();
 
                 isRestarting = shouldRestart;
 
@@ -205,20 +205,11 @@ public class BotEngine extends ListenerAdapter {
         return guild.getTextChannelById(Directories.getConfig().network_console_channel_id);
     }
 
-    /**
-     * Handle slash commands
-     * 
-     * @param event The event that triggered this command
-     * @author Mini
-     */
-    @Override
-    public void onSlashCommandInteraction(@Nonnull SlashCommandInteractionEvent event) { CommandsManager.onSlashCommand(event); }
-
     @Override
     public void onMessageReceived(@Nonnull MessageReceivedEvent event) {
         handleMessages(event.getGuildChannel(), event.getMessage());
     }
-    
+
     /**
      * When a message is updated
      * 
@@ -239,5 +230,5 @@ public class BotEngine extends ListenerAdapter {
         }
     }
 
-    public static boolean isBotInitialized() { return botBuilder != null; }
+    public static boolean isBotInitialized() { return bot != null; }
 }
