@@ -3,39 +3,71 @@
  * Controls light/dark/system theme states and persists preferences.
  */
 
+const THEMES = ['system', 'light', 'dark'];
+
+/**
+ * Returns the resolved appearance ('dark' or 'light')
+ */
+export function getEffectiveTheme(preference) {
+    if (preference === 'system' || !preference) return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    return preference;
+}
+
 export function updateThemeIcon() {
     const btn = document.getElementById('themeToggle');
     if (!btn) return;
 
-    const html = document.documentElement;
-    const currentTheme = html.getAttribute('data-theme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const isDark = currentTheme === 'dark' || (currentTheme === 'system' && prefersDark);
+    const savedPreference = localStorage.getItem('theme-preference') || 'system';
 
-    btn.innerHTML = isDark ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
+    // Update icon to reflect current preference state
+    switch (savedPreference) {
+        case 'system':
+            btn.innerHTML = '<i class="fa-solid fa-circle-half-stroke"></i>';
+            btn.setAttribute('aria-label', 'Theme: System default');
+            btn.title = 'Theme: System';
+            break;
+        case 'light':
+            btn.innerHTML = '<i class="fa-solid fa-sun"></i>';
+            btn.setAttribute('aria-label', 'Theme: Light');
+            btn.title = 'Theme: Light';
+            break;
+        case 'dark':
+            btn.innerHTML = '<i class="fa-solid fa-moon"></i>';
+            btn.setAttribute('aria-label', 'Theme: Dark');
+            btn.title = 'Theme: Dark';
+            break;
+    }
+}
+
+/**
+ * Applies the effective theme to the DOM.
+ */
+export function applyTheme(preference) {
+    const html = document.documentElement;
+    const effective = getEffectiveTheme(preference);
+
+    html.setAttribute('data-theme', preference); // 'system' | 'light' | 'dark'
+    html.setAttribute('data-color-scheme', effective); // 'dark' | 'light'
+    
+    updateThemeIcon();
 }
 
 export function initTheme() {
-    const savedTheme = localStorage.getItem('theme-preference');
-    if (savedTheme) {
-        document.documentElement.setAttribute('data-theme', savedTheme);
-    }
-    updateThemeIcon();
+    const savedTheme = localStorage.getItem('theme-preference') || 'system';
+    applyTheme(savedTheme);
 
-    // Keep icon synced if the user is using system preferences and changes OS theme
+    // React immediately when the user changes OS appearance
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-        if (document.documentElement.getAttribute('data-theme') === 'system') {
-            updateThemeIcon();
-        }
+        const currentPreference = localStorage.getItem('theme-preference') || 'system';
+        if (currentPreference === 'system') applyTheme('system');
     });
 }
 
 export function toggleTheme() {
-    const html = document.documentElement;
-    const current = html.getAttribute('data-theme');
-    const next = current === 'dark' ? 'light' : 'dark';
+    const current = localStorage.getItem('theme-preference') || 'system';
+    const nextIndex = (THEMES.indexOf(current) + 1) % THEMES.length;
+    const nextTheme = THEMES[nextIndex];
 
-    html.setAttribute('data-theme', next);
-    localStorage.setItem('theme-preference', next);
-    updateThemeIcon();
+    localStorage.setItem('theme-preference', nextTheme);
+    applyTheme(nextTheme);
 }
