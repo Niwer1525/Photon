@@ -12,7 +12,7 @@ function createModal(id, formContent) {
 class IncAuthModal extends HTMLElement {
     connectedCallback() {
         this.innerHTML = createModal('authModal', `
-            <div class="modal-tabs">
+            <div class="modal-tabs" id="authTabs">
                 <div class="modal-tab active" onclick="UI.switchAuthTab('login')">Login</div>
                 <div class="modal-tab" onclick="UI.switchAuthTab('register')">Register</div>
             </div>
@@ -38,6 +38,23 @@ class IncAuthModal extends HTMLElement {
                     </div>
                 </div>
                 <button type="submit" class="btn primary" style="width: 100%; margin-top: 1rem;">Login</button>
+            </form>
+
+            <!-- 2FA Verification Step Form -->
+            <form id="totpLoginForm" class="modal-panel" onsubmit="App.submit2FALogin(event)">
+                <div style="text-align: center; margin-bottom: 1.5rem;">
+                    <h2><i class="fa-solid fa-shield-halved text-accent"></i> Two-Factor Auth</h2>
+                    <p class="text-sm text-secondary">Enter the 6-digit code from your authenticator app</p>
+                </div>
+                <div class="form-group">
+                    <label>Authenticator Code</label>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-key left-icon"></i>
+                        <input type="text" name="code" id="totpLoginInput" pattern="[0-9]{6}" maxlength="6" inputmode="numeric" autocomplete="one-time-code" required placeholder="123456" style="letter-spacing: 0.3rem; text-align: center; font-size: 1.25rem;">
+                    </div>
+                </div>
+                <button type="submit" class="btn primary" style="width: 100%; margin-top: 1rem;">Verify & Continue</button>
+                <button type="button" class="btn icon-btn" style="width: 100%; margin-top: 0.5rem; border-radius: 12px;" onclick="UI.cancel2FALogin()">Back to Login</button>
             </form>
 
             <!-- Register Form -->
@@ -73,6 +90,40 @@ class IncAuthModal extends HTMLElement {
     }
 }
 customElements.define('inc-auth-modal', IncAuthModal);
+
+class IncTotpSetupModal extends HTMLElement {
+    connectedCallback() {
+        this.innerHTML = createModal('totpSetupModal', `
+            <div style="text-align: center; margin-bottom: 1.5rem;">
+                <h2><i class="fa-solid fa-shield-halved text-accent"></i> Enable 2FA</h2>
+                <p class="text-sm text-secondary">Scan this code with Google Authenticator, Authy, or 1Password</p>
+            </div>
+            
+            <div id="totpQrContainer" style="display: flex; justify-content: center; align-items: center; margin-bottom: 1rem; min-height: 180px;">
+                <i class="fa-solid fa-spinner fa-spin fa-2x text-secondary"></i>
+            </div>
+
+            <div class="form-group">
+                <label>Manual Secret Key</label>
+                <div class="input-wrapper">
+                    <input type="text" id="totpManualKey" readonly style="font-family: monospace; text-align: center; cursor: pointer;" onclick="UI.copy(this.value)" title="Click to copy">
+                </div>
+            </div>
+
+            <form onsubmit="App.confirm2FASetup(event)">
+                <div class="form-group">
+                    <label>Confirm 6-Digit Code</label>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-key left-icon"></i>
+                        <input type="text" name="code" pattern="[0-9]{6}" maxlength="6" inputmode="numeric" required placeholder="123456" style="letter-spacing: 0.3rem; text-align: center; font-size: 1.25rem;">
+                    </div>
+                </div>
+                <button type="submit" class="btn primary" style="width: 100%; margin-top: 1rem;">Activate 2FA</button>
+            </form>
+        `);
+    }
+}
+customElements.define('inc-totp-setup-modal', IncTotpSetupModal);
 
 class IncCreateLicenseModal extends HTMLElement {
     connectedCallback() {
@@ -119,16 +170,27 @@ class IncEditProfileModal extends HTMLElement {
                     </div>
                     <div class="form-group">
                         <label>New Password <span class="text-secondary">(Optional)</span></label>
-                        <input type="password" name="newPassword" minlength="8" placeholder="Leave blank to keep current">
+                        <input type="password" name="newPassword" id="editNewPassword" minlength="8" placeholder="Leave blank to keep current">
                     </div>
                     <div class="form-group">
                         <label>Current Password <span class="text-danger">*</span></label>
                         <input type="password" name="currentPassword" required placeholder="Required to save changes">
                     </div>
+
+                    <!-- 2FA Code Input: Visible if user has 2FA active -->
+                    <div class="form-group hidden" id="profile2faGroup">
+                        <label>2FA Authenticator Code <span class="text-danger">*</span></label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-key left-icon"></i>
+                            <input type="text" name="code" id="edit2faCode" pattern="[0-9]{6}" maxlength="6" inputmode="numeric" placeholder="123456" style="letter-spacing: 0.2rem;">
+                        </div>
+                        <span class="text-sm text-secondary">Required because two-factor authentication is active on your account.</span>
+                    </div>
+
                     <button type="submit" class="btn primary" style="width: 100%; margin-top: 1rem;">Save Changes</button>
                 </div>
             </form>
         `);
     }
 }
-customElements.define('inc-edit-profile-modal', IncEditProfileModal); 
+customElements.define('inc-edit-profile-modal', IncEditProfileModal);

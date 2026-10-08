@@ -5,6 +5,7 @@ const State = {
     token: '',
     userToken: localStorage.getItem('photon-user-token') || '',
     account: JSON.parse(localStorage.getItem('photon-account')) || null,
+    pending2FATicket: '',
     purchaseToken: new URLSearchParams(window.location.search).get('token') || '',
     activePage: 'overview',
     config: null,
@@ -231,6 +232,18 @@ const UI = {
                 }).join('') : '<p class="text-secondary">No products linked to this account.</p>';
             }
 
+            const btn2fa = document.getElementById('btnSetup2FA');
+            if (btn2fa && State.account) {
+                const isEnabled = !!State.account.totpEnabled;
+                btn2fa.style.color = isEnabled ? 'var(--success-color)' : 'var(--text-secondary)';
+                btn2fa.title = isEnabled ? '2FA Enabled (Click to disable)' : 'Enable 2FA';
+                
+                // Change icon to lock or shield check when enabled
+                btn2fa.innerHTML = isEnabled 
+                    ? '<i class="fa-solid fa-shield-check"></i>' 
+                    : '<i class="fa-solid fa-shield-halved"></i>';
+            }
+
             document.getElementById('purchaseAlert').classList.add('hidden');
         }
     },
@@ -241,6 +254,15 @@ const UI = {
 
         modal.classList.add('open');
         if (id === 'createLicenseModal') App.loadLicenseProducts();
+
+        // Toggle 2FA field in edit profile modal depending on account state
+        if (id === 'editProfileModal') {
+            const group = document.getElementById('profile2faGroup');
+            const codeInput = document.getElementById('edit2faCode');
+            const is2FA = !!State.account?.totpEnabled;
+            if (group) group.classList.toggle('hidden', !is2FA);
+            if (codeInput) codeInput.required = is2FA;
+        }
     },
     
     closeModal(event, force=false) {
@@ -260,6 +282,24 @@ const UI = {
         const formId = tab === 'login' ? 'loginForm' : 'registerForm';
         const formEl = document.getElementById(formId);
         if (formEl) formEl.classList.add('active');
+    },
+
+    show2FAStep(ticket) {
+        State.pending2FATicket = ticket;
+        document.querySelectorAll('.modal-panel').forEach(p => p.classList.remove('active'));
+        document.getElementById('totpLoginForm')?.classList.add('active');
+        document.getElementById('authTabs')?.classList.add('hidden'); // Hide Login/Register tabs
+        const input = document.getElementById('totpLoginInput');
+        if (input) {
+            input.value = '';
+            setTimeout(() => input.focus(), 150);
+        }
+    },
+
+    cancel2FALogin() {
+        State.pending2FATicket = '';
+        document.getElementById('authTabs')?.classList.remove('hidden');
+        this.switchAuthTab('login');
     },
 
     toast(msg, type='info') {
@@ -326,8 +366,7 @@ const App = {
                 }).catch(() => {});
             }
 
-            // Single unified auth call
-            const res = await fetch('accounts/auth_account', {
+            const res = await fetch('/accounts/auth_account', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: body.toString(),
@@ -340,23 +379,15 @@ const App = {
             }
 
             const payload = await res.json();
-            State.account = payload.account || payload;
-            localStorage.setItem('photon-account', JSON.stringify(State.account));
 
-            if (payload.isAdmin) {
-                State.token = '';
-                State.userToken = '';
-                localStorage.removeItem('photon-user-token');
-                UI.toast('Signed in as admin', 'success');
-            } else {
-                State.userToken = payload.token || '';
-                localStorage.setItem('photon-user-token', State.userToken);
-                await this.loadEntitlements();
-                UI.toast('Signed in', 'success');
+            // CHECK FOR 2FA REQUIRED STEP
+            if (payload.status === '2FA_REQUIRED' && payload.ticket) {
+                UI.show2FAStep(payload.ticket);
+                return;
             }
 
-            this.clearPurchaseToken();
-            this.onLoginSuccess();
+            // Normal login flow
+            await this.handleLoginSuccessPayload(payload);
         } catch (err) {
             UI.toast(err.message, 'error');
         } finally {
@@ -364,6 +395,139 @@ const App = {
                 btn.disabled = false;
                 btn.innerHTML = originalText;
             }
+        }
+    },
+
+    async submit2FALogin(e) {
+        e.preventDefault();
+        const btn = e.target.querySelector('button[type="submit"]');
+        const originalText = btn ? btn.innerHTML : '';
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+        }
+
+        const code = new FormData(e.target).get('code');
+
+        try {
+            const res = await fetch('/accounts/auth_account/2fa', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ticket: State.pending2FATicket, code: code }),
+                credentials: 'same-origin'
+            });
+
+            if (!res.ok) {
+                const err = await res.text();
+                throw new Error(err || 'Verification failed');
+            }
+
+            const payload = await res.json();
+            State.pending2FATicket = '';
+            UI.cancel2FALogin(); // Reset form views
+            await this.handleLoginSuccessPayload(payload);
+        } catch (err) {
+            UI.toast(err.message, 'error');
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+    },
+
+    async handleLoginSuccessPayload(payload) {
+        State.account = payload.account || payload;
+        localStorage.setItem('photon-account', JSON.stringify(State.account));
+
+        if (payload.isAdmin) {
+            State.token = '';
+            State.userToken = '';
+            localStorage.removeItem('photon-user-token');
+            UI.toast('Signed in as admin', 'success');
+        } else {
+            State.userToken = payload.token || '';
+            localStorage.setItem('photon-user-token', State.userToken);
+            await this.loadEntitlements();
+            UI.toast('Signed in', 'success');
+        }
+
+        this.clearPurchaseToken();
+        this.onLoginSuccess();
+    },
+
+    // --- 2FA Setup Logic ---
+    async open2FASetup() {
+        if (State.account?.totpEnabled) {
+        if (!confirm('Two-factor authentication is already active. Do you want to disable it?')) return;
+
+        const code = prompt('Enter a 6-digit code from your authenticator app to disable 2FA:');
+        if (!code) return;
+
+        try {
+            await Api('/accounts/2fa/disable', {
+                method: 'POST',
+                body: JSON.stringify({ code: code.trim() })
+            });
+
+            UI.toast('2FA has been disabled', 'success');
+            
+            // Refresh account data
+            const updatedAccount = await Api('/accounts/me');
+            State.account = updatedAccount;
+            localStorage.setItem('photon-account', JSON.stringify(updatedAccount));
+            UI.updateAuthVisbility();
+        } catch (err) {
+            UI.toast(err.message, 'error');
+        }
+        return;
+    }
+
+        UI.openModal('totpSetupModal');
+        const container = document.getElementById('totpQrContainer');
+        const manualKey = document.getElementById('totpManualKey');
+        container.innerHTML = '<i class="fa-solid fa-spinner fa-spin fa-2x text-secondary"></i>';
+        manualKey.value = '';
+
+        try {
+            const data = await Api('/accounts/2fa/setup');
+            container.innerHTML = `<img src="${data.qrCode}" alt="2FA QR Code" style="width: 180px; height: 180px; border-radius: 12px; background: white; padding: 8px;">`;
+            manualKey.value = data.manualKey;
+        } catch (err) {
+            container.innerHTML = `<p class="text-danger text-sm">Failed to load QR code</p>`;
+            UI.toast(err.message, 'error');
+        }
+    },
+
+    async confirm2FASetup(e) {
+        e.preventDefault();
+        const btn = e.target.querySelector('button[type="submit"]');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+
+        const code = new FormData(e.target).get('code');
+
+        try {
+            await Api('/accounts/2fa/confirm', {
+                method: 'POST',
+                body: JSON.stringify({ code: code })
+            });
+
+            UI.toast('Two-factor authentication enabled!', 'success');
+            UI.closeModal(null, true);
+            e.target.reset();
+
+            // Refresh profile data to reflect totpEnabled = true
+            const updatedAccount = await Api('/accounts/me');
+            State.account = updatedAccount;
+            localStorage.setItem('photon-account', JSON.stringify(updatedAccount));
+            UI.updateAuthVisbility();
+        } catch (err) {
+            UI.toast(err.message, 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
         }
     },
 
@@ -444,9 +608,15 @@ const App = {
                 username: fd.get('username'),
                 email: fd.get('email')
             };
+            
             if (fd.get('newPassword')) {
                 payload.newPassword = fd.get('newPassword');
                 payload.confirmPassword = fd.get('newPassword'); 
+            }
+
+            // Include 2FA code if provided
+            if (fd.get('code')) {
+                payload.code = fd.get('code').trim();
             }
 
             const acc = await Api('/accounts/update_profile', {
@@ -460,7 +630,9 @@ const App = {
             UI.updateAuthVisbility();
             UI.closeModal(null, true);
             UI.toast('Profile updated', 'success');
-        } catch (err) { UI.toast(err.message, 'error'); }
+        } catch (err) { 
+            UI.toast(err.message, 'error'); 
+        }
     },
 
     async loadEntitlements() {

@@ -39,6 +39,12 @@ public class ObjectUserAccount extends SQLSerializable<ObjectUserAccount> implem
     @IColumnField(name = "language", defaultValue = @IDefaultValue(value = "ENGLISH"))
     private String language = Language.ENGLISH.name();
 
+    @IColumnField(name = "totpEnabled", defaultValue = @IDefaultValue(value = "false"))
+    private boolean totpEnabled = false; // Toptal One-Time Password (TOTP) for 2FA
+
+    @IColumnField(name = "totpSecret")
+    private String totpSecret; // Toptal One-Time Password (TOTP) for 2FA
+
     public static String generateAuthCode() { return new BigInteger(40, new SecureRandom()).toString(32); }
 
     public boolean hasDiscordLinked() { return this.discordID != null && !this.discordID.isEmpty(); }
@@ -65,6 +71,12 @@ public class ObjectUserAccount extends SQLSerializable<ObjectUserAccount> implem
 
     public Language getLanguage() { return Language.fromString(this.language); }
 
+    public boolean isTotpEnabled() { return this.totpEnabled; }
+    public void setTotpEnabled(boolean totpEnabled) { this.totpEnabled = totpEnabled; }
+
+    public String getTotpSecret() { return this.totpSecret; }
+    public void setTotpSecret(String totpSecret) { this.totpSecret = totpSecret; }
+
     @Override 
     public Map<String, Object> payload() {
         final Map<String, Object> response = new HashMap<>();
@@ -75,6 +87,7 @@ public class ObjectUserAccount extends SQLSerializable<ObjectUserAccount> implem
         response.put("discordAuthCode", this.discordAuthCode);
         response.put("administrator", isAdministrator());
         response.put("language", getLanguage().name());
+        response.put("totpEnabled", this.totpEnabled);
         return response;
     }
 }

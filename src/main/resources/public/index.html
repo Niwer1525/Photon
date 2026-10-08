@@ -105,11 +105,16 @@
             <div class="panel">
                 <div class="panel-header">
                     <h2><i class="fa-solid fa-user text-accent"></i> Your Profile</h2>
-                    <button class="btn primary icon-btn" title="Edit Profile" onclick="UI.openModal('editProfileModal')"><i class="fa-solid fa-pen"></i></button>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button class="btn icon-btn" id="btnSetup2FA" title="Configure 2FA" onclick="App.open2FASetup()">
+                            <i class="fa-solid fa-shield-halved"></i>
+                        </button>
+                        <button class="btn primary icon-btn" title="Edit Profile" onclick="UI.openModal('editProfileModal')">
+                            <i class="fa-solid fa-pen"></i>
+                        </button>
+                    </div>
                 </div>
-                <div class="grid grid-cols-2" id="profileDetailsGrid">
-                    <!-- Dynamic properties injected by JS -->
-                </div>
+                <div class="grid grid-cols-2" id="profileDetailsGrid"></div>
             </div>
         </section>
     </main>
@@ -119,6 +124,7 @@
 
     <!-- Modals -->
     <inc-auth-modal></inc-auth-modal>
+    <inc-totp-setup-modal></inc-totp-setup-modal>
     <inc-create-license-modal></inc-create-license-modal>
     <inc-edit-profile-modal></inc-edit-profile-modal>
 

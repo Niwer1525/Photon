@@ -13,11 +13,15 @@ import niwer.photon.web.endpoints.HomeEndpoint;
 import niwer.photon.web.endpoints.IEndpoint;
 import niwer.photon.web.endpoints.LicenseValidateEndpoint;
 import niwer.photon.web.endpoints.accounts.AccountEntitlementsEndpoint;
+import niwer.photon.web.endpoints.accounts.AuthAccount2FAEndpoint;
 import niwer.photon.web.endpoints.accounts.AuthAccountEndpoint;
 import niwer.photon.web.endpoints.accounts.ChangePasswordEndpoint;
+import niwer.photon.web.endpoints.accounts.Confirm2FAEndpoint;
 import niwer.photon.web.endpoints.accounts.CreateAccountEndpoint;
+import niwer.photon.web.endpoints.accounts.Disable2FAEndpoint;
 import niwer.photon.web.endpoints.accounts.LogoutEndpoint;
 import niwer.photon.web.endpoints.accounts.MeEndpoint;
+import niwer.photon.web.endpoints.accounts.Setup2FAEndpoint;
 import niwer.photon.web.endpoints.accounts.UpdateAccountSettingsEndpoint;
 import niwer.photon.web.endpoints.accounts.licenses.AccountLicenseCreateEndpoint;
 import niwer.photon.web.endpoints.accounts.licenses.AccountLicenseListEndpoint;
@@ -70,6 +74,13 @@ public class WebServerEngine {
                 IEndpoint.register(cfg, LicenseValidateEndpoint.class);
                 IEndpoint.register(cfg, DownloadEndpoint.class);
                 IEndpoint.register(cfg, GetAssetsEndpoint.class);
+                {
+                    /* 2FA */
+                    IEndpoint.register(cfg, Setup2FAEndpoint.class);
+                    IEndpoint.register(cfg, Confirm2FAEndpoint.class);
+                    IEndpoint.register(cfg, AuthAccount2FAEndpoint.class);
+                    IEndpoint.register(cfg, Disable2FAEndpoint.class);
+                }
                 {
                     /* Admin panel */
                     IEndpoint.register(cfg, AdminTablesEndpoint.class);

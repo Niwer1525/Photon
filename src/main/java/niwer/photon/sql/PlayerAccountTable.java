@@ -67,7 +67,7 @@ public class PlayerAccountTable extends Table {
             Console.log("Cannot hash password for account creation").type(PhotonLogTypes.SQL).error().container(PhotonEngine.LOGGER).send();
             return null;
         }
-
+        
         InsertionManager.insert(PhotonEngine.DATA_BASE, PlayerAccountTable.class, "uuid", "username", "email", "password", "discordAuthCode")
             .row(UniqueUserID, username.trim(), email.trim().toLowerCase(), hashedPassword, ObjectUserAccount.generateAuthCode())
         .execute();
@@ -353,6 +353,22 @@ public class PlayerAccountTable extends Table {
             .set("password", hashedPassword)
         .where(Expression.of("uuid").isEqualTo(uuid))
         .execute();
+    }
+
+    public static void setTotpSecret(String uuid, String encryptedSecret) {
+        if (uuid == null || uuid.trim().isEmpty()) return;
+        UpdateManager.update(PhotonEngine.DATA_BASE, PlayerAccountTable.class)
+            .set("totpSecret", encryptedSecret)
+            .where(Expression.of("uuid").isEqualTo(uuid))
+            .execute();
+    }
+
+    public static void setTotpEnabled(String uuid, boolean enabled) {
+        if (uuid == null || uuid.trim().isEmpty()) return;
+        UpdateManager.update(PhotonEngine.DATA_BASE, PlayerAccountTable.class)
+            .set("totpEnabled", enabled)
+            .where(Expression.of("uuid").isEqualTo(uuid))
+            .execute();
     }
 
     /**
