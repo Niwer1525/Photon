@@ -15,6 +15,9 @@ export class IncFooter extends HTMLElement {
                     <i class="fa-solid fa-shield-halved fa-lg"></i>
                 </a>
             </div>
+            <p class="footer-backend">
+                Powered by <a href="https://git.niwer.dev/Photon" target="_blank" rel="noopener noreferrer">Photon</a>, the open-source backend behind Niwer's products. Inspect our code and verify its security anytime.
+            </p>
         `;
     }
 }
