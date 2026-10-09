@@ -15,9 +15,9 @@ import niwer.queryon.queries.interaction.SelectionManager;
 public class AccountRetentionPurger implements Runnable {
 
     public static void createPurgerScheduler() {
-        // Thread retentionThread = new Thread(new AccountRetentionPurger(), "AccountRetentionPurger");
-        // retentionThread.setDaemon(true);
-        // retentionThread.start();
+        Thread retentionThread = new Thread(new AccountRetentionPurger(), "AccountRetentionPurger");
+        retentionThread.setDaemon(true);
+        retentionThread.start();
     }
 
     private AccountRetentionPurger() {}
