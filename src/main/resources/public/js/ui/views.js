@@ -90,7 +90,7 @@ export function renderProfileView() {
         btn2fa.style.color = isEnabled ? 'var(--success-color)' : 'var(--text-secondary)';
         btn2fa.title = isEnabled ? '2FA Enabled (Click to disable)' : 'Enable 2FA';
         btn2fa.innerHTML = isEnabled 
-            ? '<i class="fa-solid fa-shield-check"></i>' 
+            ? '<i class="fa-solid fa-shield"></i>' 
             : '<i class="fa-solid fa-shield-halved"></i>';
     }
 }

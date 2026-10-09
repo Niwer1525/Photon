@@ -27,10 +27,7 @@ public class TotpManager {
     private static final String AES_ALGO = "AES/GCM/NoPadding";
     private static final int TAG_LENGTH_BITS = 128;
     private static final int IV_LENGTH = 12;
-
-    // In production, load this from System.getenv("TOTP_ENCRYPTION_KEY") (must be 32 bytes)
-    private static final byte[] AES_KEY_BYTES = "12345678901234567890123456789012".getBytes();
-    private static final SecretKey SECRET_KEY = new SecretKeySpec(AES_KEY_BYTES, "AES");
+    private static final SecretKey SECRET_KEY = new SecretKeySpec(Directories.getConfig().getTotpSecretBytes(), "AES");
 
     private static final DefaultCodeVerifier VERIFIER = new DefaultCodeVerifier(
         new DefaultCodeGenerator(HashingAlgorithm.SHA1),

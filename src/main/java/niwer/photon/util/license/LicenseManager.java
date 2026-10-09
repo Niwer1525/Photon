@@ -1,11 +1,13 @@
 package niwer.photon.util.license;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.SecureRandom;
 import java.util.Date;
 
 import niwer.photon.objects.ObjectLicense;
 import niwer.photon.sql.LicenseTable;
 import niwer.photon.sql.PlayerAccountTable;
-import niwer.photon.util.HashUtils;
 import niwer.photon.util.OperatingSystem;
 import niwer.photon.util.stripe.EntitlementManager;
 
@@ -18,22 +20,38 @@ public final class LicenseManager {
 
 	private static final int LICENSE_KEY_GROUPS = 4;
 	private static final int LICENSE_KEY_GROUP_LENGTH = 5;
-	private static final char[] LICENSE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ1234567890".toCharArray();
+	private static final char[] LICENSE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789".toCharArray(); // Crockford/Base32 style alphabet (omits I, O to prevent confusion)
 
-	private LicenseManager() {}
+    private LicenseManager() {}
 
-	private static String generateLicenseKey(String customerName, String customerEmail, String creatorUuid, String productId) {
-		final StringBuilder BUILDER = new StringBuilder("");
-		final int HASH = HashUtils.hash(customerName + customerEmail + creatorUuid + productId).hashCode();
+    public static String generateLicenseKey(String customerName, String customerEmail, String creatorUuid, String productId) {
+        try {
+            // Add entropy so keys can be regenerated if revoked
+            byte[] nonce = new byte[8];
+            new SecureRandom().nextBytes(nonce);
 
-		/* Generate license key groups */
-		for (int group = 0; group < LICENSE_KEY_GROUPS; group++) {
-			if (group > 0) BUILDER.append('-'); // Add dash between groups
-			for (int index = 0; index < LICENSE_KEY_GROUP_LENGTH; index++) BUILDER.append(LICENSE_ALPHABET[(Math.abs(HASH) + group * LICENSE_KEY_GROUP_LENGTH + index) % LICENSE_ALPHABET.length]);
-		}
+            // Cryptographic digest across inputs + nonce
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            digest.update((customerName + customerEmail + creatorUuid + productId).getBytes(StandardCharsets.UTF_8));
+            byte[] hash = digest.digest(nonce);
 
-		return BUILDER.toString();
-	}
+            // Pick non-sequential pseudo-random characters using the hash bytes
+            StringBuilder builder = new StringBuilder();
+            int hashIndex = 0;
+
+            for (int group = 0; group < LICENSE_KEY_GROUPS; group++) {
+                if (group > 0) builder.append('-');
+                for (int i = 0; i < LICENSE_KEY_GROUP_LENGTH; i++) {
+                    int b = hash[hashIndex++ % hash.length] & 0xFF;
+                    builder.append(LICENSE_ALPHABET[b % LICENSE_ALPHABET.length]);
+                }
+            }
+
+            return builder.toString();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to generate license key", e);
+        }
+    }
 
     /**
      * Issue a new license with the given information and store it in the database. The license key will be automatically generated and guaranteed to be unique.

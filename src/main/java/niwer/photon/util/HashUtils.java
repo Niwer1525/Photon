@@ -7,7 +7,9 @@ import java.nio.file.Path;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.Arrays;
+import java.util.Base64;
 
 import de.mkammerer.argon2.Argon2;
 import de.mkammerer.argon2.Argon2Factory;
@@ -23,6 +25,29 @@ public final class HashUtils {
     private static final String ARGON2_PREFIX = "$argon2";
 
     private HashUtils() {}
+
+    /**
+     * Generate a random salt of the specified length using a secure random number generator.
+     * 
+     * @param length The length of the salt in bytes
+     * @return A byte array containing the generated salt
+     */
+    public static byte[] generateRandomSalt(int length) {
+        byte[] salt = new byte[length];
+        new SecureRandom().nextBytes(salt);
+        return salt;
+    }
+
+    /**
+     * Generate a random salt of the specified length and encode it in Base64.
+     * 
+     * @param length The length of the salt in bytes
+     * @return A Base64-encoded string containing the generated salt
+     */
+    public static String generateRandomSaltBase64(int length) {
+        byte[] salt = generateRandomSalt(length);
+        return Base64.getEncoder().encodeToString(salt);
+    }
 
     /**
      * Hash a password using Argon2id algorithm.

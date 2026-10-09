@@ -21,6 +21,7 @@ import niwer.lumen.Console;
 import niwer.photon.objects.ObjectProduct;
 import niwer.photon.objects.ObjectPurchase;
 import niwer.photon.util.GsonUtils;
+import niwer.photon.util.HashUtils;
 import niwer.photon.util.OperatingSystem;
 import niwer.photon.util.PhotonLogTypes;
 
@@ -51,11 +52,16 @@ public class Directories
 				configFile.createNewFile();
 				try (var WRITER = new FileWriter(configFile)) { WRITER.write(GsonUtils.PRETTY_GSON.toJson(NetworkConfig.DEFAULT)); }
 			}
-			final BufferedReader reader = new BufferedReader(new FileReader(configFile));
-			config = GsonUtils.PRETTY_GSON.fromJson(reader, NetworkConfig.class);
-			reader.close();
+
+			/* Read the file */
+			final BufferedReader READER = new BufferedReader(new FileReader(configFile));
+			config = GsonUtils.PRETTY_GSON.fromJson(READER, NetworkConfig.class);
+			READER.close();
+
 			if (config == null) config = new NetworkConfig();
 		} catch (IOException e) {}
+
+		save(); // Save the config file to ensure it is up-to-date
 	}
 
 	/**
@@ -160,6 +166,7 @@ public class Directories
 
 		@SerializedName("account_retention_days") public int account_retention_days = 14; // Default retention period for deleted accounts (in days)
 		@SerializedName("totp_issuer") public String totp_issuer = "Photon";
+		@SerializedName("totp_secret") public String totp_secret = HashUtils.generateRandomSaltBase64(32); // Default TOTP secret (hashed for security)
 
 		public boolean isEmpty() {
 			return this.equals(NetworkConfig.DEFAULT);
@@ -216,6 +223,10 @@ public class Directories
 
 		public String getTotpIssuer() {
 			return totp_issuer != null && !totp_issuer.isBlank() ? totp_issuer : "Photon";
+		}
+
+		public byte[] getTotpSecretBytes() {
+			return totp_secret != null && !totp_secret.isBlank() ? Base64.getDecoder().decode(totp_secret) : new byte[0];
 		}
 	}
 }

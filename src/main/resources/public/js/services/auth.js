@@ -353,7 +353,6 @@ export async function requestAccountDeletion(e) {
     };
 
     try {
-        // Use your API wrapper pointing to /accounts/delete_account
         await api('/accounts/delete_account', {
             method: 'DELETE',
             body: JSON.stringify(payload)
