@@ -1,0 +1,9 @@
+# Disallow all crawlers to index everything
+User-agent: *
+Disallow: /
+
+# Block sensitive or private folders
+Disallow: /.github/
+
+# Point to the sitemap
+Sitemap: https://panel.niwer.dev/sitemap.xml
