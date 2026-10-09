@@ -9,7 +9,7 @@ import niwer.photon.sql.PlayerAccountTable;
 import niwer.photon.sql.PurchaseTable;
 import niwer.photon.util.session.Session;
 import niwer.photon.util.session.SessionManager;
-import niwer.photon.util.session.SessionManager.Scope;
+import niwer.photon.util.session.SessionScope;
 import niwer.photon.util.stripe.EntitlementManager;
 import niwer.photon.web.HttpMethod;
 import niwer.photon.web.endpoints.EndpointUtils;
@@ -89,7 +89,7 @@ public class CreateAccountEndpoint implements IEndpoint {
             return;
         }
 
-        final Session SESSION = SessionManager.login(EMAIL, PASSWORD, Scope.USER);
+        final Session SESSION = SessionManager.login(EMAIL, PASSWORD, SessionScope.USER);
         if (SESSION == null) {
             handler.status(500).result("Failed to create session");
             return;

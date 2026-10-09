@@ -32,6 +32,11 @@ dependencies {
 	implementation "de.mkammerer:argon2-jvm-nolibs:${project.argon2_version}"
 	implementation "com.stripe:stripe-java:${project.stripe_version}"
 	implementation "org.simplejavamail:simple-java-mail:${project.simple_java_mail_version}"
+
+	/* 2FA */
+    implementation "dev.samstevens.totp:totp:${project.totp_version}"
+    implementation "com.google.zxing:core:${project.zxing_core_version}"
+    implementation "com.google.zxing:javase:${project.zxing_javase_version}"
 }
 
 java {

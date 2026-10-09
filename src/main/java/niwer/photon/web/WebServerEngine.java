@@ -13,11 +13,16 @@ import niwer.photon.web.endpoints.HomeEndpoint;
 import niwer.photon.web.endpoints.IEndpoint;
 import niwer.photon.web.endpoints.LicenseValidateEndpoint;
 import niwer.photon.web.endpoints.accounts.AccountEntitlementsEndpoint;
+import niwer.photon.web.endpoints.accounts.AuthAccount2FAEndpoint;
 import niwer.photon.web.endpoints.accounts.AuthAccountEndpoint;
 import niwer.photon.web.endpoints.accounts.ChangePasswordEndpoint;
+import niwer.photon.web.endpoints.accounts.Confirm2FAEndpoint;
 import niwer.photon.web.endpoints.accounts.CreateAccountEndpoint;
+import niwer.photon.web.endpoints.accounts.DeleteAccountEndpoint;
+import niwer.photon.web.endpoints.accounts.Disable2FAEndpoint;
 import niwer.photon.web.endpoints.accounts.LogoutEndpoint;
 import niwer.photon.web.endpoints.accounts.MeEndpoint;
+import niwer.photon.web.endpoints.accounts.Setup2FAEndpoint;
 import niwer.photon.web.endpoints.accounts.UpdateAccountSettingsEndpoint;
 import niwer.photon.web.endpoints.accounts.licenses.AccountLicenseCreateEndpoint;
 import niwer.photon.web.endpoints.accounts.licenses.AccountLicenseListEndpoint;
@@ -71,6 +76,13 @@ public class WebServerEngine {
                 IEndpoint.register(cfg, DownloadEndpoint.class);
                 IEndpoint.register(cfg, GetAssetsEndpoint.class);
                 {
+                    /* 2FA */
+                    IEndpoint.register(cfg, Setup2FAEndpoint.class);
+                    IEndpoint.register(cfg, Confirm2FAEndpoint.class);
+                    IEndpoint.register(cfg, AuthAccount2FAEndpoint.class);
+                    IEndpoint.register(cfg, Disable2FAEndpoint.class);
+                }
+                {
                     /* Admin panel */
                     IEndpoint.register(cfg, AdminTablesEndpoint.class);
                     IEndpoint.register(cfg, AdminTableDataEndpoint.class);
@@ -88,7 +100,9 @@ public class WebServerEngine {
                     IEndpoint.register(cfg, AccountEntitlementsEndpoint.class);
                     IEndpoint.register(cfg, MeEndpoint.class);
                     IEndpoint.register(cfg, ChangePasswordEndpoint.class);
+                    IEndpoint.register(cfg, DeleteAccountEndpoint.class);
                     IEndpoint.register(cfg, UpdateAccountSettingsEndpoint.class);
+                    
                     IEndpoint.register(cfg, AccountLicenseListEndpoint.class);
                     IEndpoint.register(cfg, AccountLicenseProductsEndpoint.class);
                     IEndpoint.register(cfg, AccountLicenseCreateEndpoint.class);

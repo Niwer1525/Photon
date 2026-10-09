@@ -13,7 +13,7 @@ import niwer.photon.objects.ObjectSubscription;
 import niwer.photon.util.stripe.StripeHelper;
 import niwer.photon.util.stripe.StripePurchaseStatus;
 import niwer.queryon.DataBase;
-import niwer.queryon.queries.Expression;
+import niwer.queryon.queries.Expressions;
 import niwer.queryon.queries.interaction.InsertionManager;
 import niwer.queryon.queries.interaction.SelectionManager;
 import niwer.queryon.queries.interaction.UpdateManager;
@@ -40,7 +40,7 @@ public class SubscriptionTable extends Table {
     public static ObjectSubscription getByEmail(String email) {
         if (email == null || email.isBlank()) return null;
         return SelectionManager.select(PhotonEngine.DATA_BASE, SubscriptionTable.class)
-            .where(Expression.of("customer_email").isEqualTo(StripeHelper.normalizeEmail(email)))
+            .where(Expressions.isEqualTo("customer_email", StripeHelper.normalizeEmail(email)))
             .limit(1)
             .executeSerializable(ObjectSubscription.class);
     }
@@ -48,7 +48,7 @@ public class SubscriptionTable extends Table {
     private static ObjectSubscription getBySubscriptionId(String subscriptionId) {
         if (subscriptionId == null || subscriptionId.isBlank()) return null;
         return SelectionManager.select(PhotonEngine.DATA_BASE, SubscriptionTable.class)
-            .where(Expression.of("subscription_id").isEqualTo(subscriptionId))
+            .where(Expressions.isEqualTo("subscription_id", subscriptionId))
             .limit(1)
             .executeSerializable(ObjectSubscription.class);
     }
@@ -62,7 +62,7 @@ public class SubscriptionTable extends Table {
     public static ObjectSubscription getByCustomerId(String customerId) {
         if (customerId == null || customerId.isBlank()) return null;
         return SelectionManager.select(PhotonEngine.DATA_BASE, SubscriptionTable.class)
-            .where(Expression.of("customer_id").isEqualTo(customerId))
+            .where(Expressions.isEqualTo("customer_id", customerId))
             .limit(1)
             .executeSerializable(ObjectSubscription.class);
     }
@@ -73,7 +73,7 @@ public class SubscriptionTable extends Table {
     public static List<ObjectSubscription> getByAccountUuid(String accountUuid) {
         if (accountUuid == null || accountUuid.isBlank()) return List.of();
         return SelectionManager.select(PhotonEngine.DATA_BASE, SubscriptionTable.class)
-            .where(Expression.of("account_uuid").isEqualTo(accountUuid))
+            .where(Expressions.isEqualTo("account_uuid", accountUuid))
             .executeList(ObjectSubscription.class);
     }
 
@@ -152,7 +152,7 @@ public class SubscriptionTable extends Table {
                 .set("status", status.name())
                 .set("expires_at", expiresAt)
                 .set("updated_at", updatedAt)
-                .where(Expression.of(existing.subscriptionId() != null && !existing.subscriptionId().isBlank() ? "subscription_id" : "id").isEqualTo(existing.subscriptionId() != null && !existing.subscriptionId().isBlank() ? existing.subscriptionId() : existing.id()))
+                .where(Expressions.isEqualTo(existing.subscriptionId() != null && !existing.subscriptionId().isBlank() ? "subscription_id" : "id", existing.subscriptionId() != null && !existing.subscriptionId().isBlank() ? existing.subscriptionId() : existing.id()))
                 .execute();
         }
 

@@ -4,7 +4,7 @@ import java.util.concurrent.TimeUnit;
 
 import io.javalin.http.Context;
 import niwer.photon.util.session.SessionManager;
-import niwer.photon.util.session.SessionManager.Scope;
+import niwer.photon.util.session.SessionScope;
 import niwer.photon.web.HttpMethod;
 import niwer.photon.web.endpoints.IEndpoint;
 
@@ -19,7 +19,7 @@ public class LogoutEndpoint implements IEndpoint {
         IEndpoint.setupRateLimit(handler, 5, TimeUnit.MINUTES);
 
         /* Try to login as admin first */
-        for(final Scope SCOPE : Scope.values()) {
+        for(final SessionScope SCOPE : SessionScope.values()) {
             final String TOKEN = SCOPE.extractToken(handler);
             if(TOKEN == null || TOKEN.isBlank()) continue;
 

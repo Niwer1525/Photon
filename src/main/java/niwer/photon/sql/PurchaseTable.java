@@ -13,7 +13,7 @@ import niwer.photon.objects.ObjectPurchase;
 import niwer.photon.util.stripe.StripeHelper;
 import niwer.photon.util.stripe.StripePurchaseStatus;
 import niwer.queryon.DataBase;
-import niwer.queryon.queries.Expression;
+import niwer.queryon.queries.Expressions;
 import niwer.queryon.queries.interaction.InsertionManager;
 import niwer.queryon.queries.interaction.SelectionManager;
 import niwer.queryon.queries.interaction.UpdateManager;
@@ -114,7 +114,7 @@ public class PurchaseTable extends Table {
             .set("status", status == null ? PURCHASE.status() : status)
             .set("updated_at", new Date())
             .set("github_username", githubUsername != null && !githubUsername.isBlank() ? githubUsername : PURCHASE.githubUsername())
-            .where(Expression.of("purchase_token").isEqualTo(StripeHelper.normalizeToken(purchaseToken)))
+            .where(Expressions.isEqualTo("purchase_token", StripeHelper.normalizeToken(purchaseToken)))
             .execute();
 
         return getByToken(purchaseToken);
@@ -130,7 +130,7 @@ public class PurchaseTable extends Table {
     public static ObjectPurchase getByCustomerId(String stripeCustomerId) {
         if (stripeCustomerId == null || stripeCustomerId.isBlank()) return null;
         return SelectionManager.select(PhotonEngine.DATA_BASE, PurchaseTable.class)
-            .where(Expression.of("stripe_customer_id").isEqualTo(stripeCustomerId.trim()))
+            .where(Expressions.isEqualTo("stripe_customer_id", stripeCustomerId.trim()))
             .limit(1)
             .executeSerializable(ObjectPurchase.class);
     }
@@ -138,7 +138,7 @@ public class PurchaseTable extends Table {
     private static ObjectPurchase getByToken(String purchaseToken) {
         if (purchaseToken == null || purchaseToken.isBlank()) return null;
         return SelectionManager.select(PhotonEngine.DATA_BASE, PurchaseTable.class)
-            .where(Expression.of("purchase_token").isEqualTo(StripeHelper.normalizeToken(purchaseToken)))
+            .where(Expressions.isEqualTo("purchase_token", StripeHelper.normalizeToken(purchaseToken)))
             .limit(1)
             .executeSerializable(ObjectPurchase.class);
     }
@@ -152,7 +152,7 @@ public class PurchaseTable extends Table {
     public static ObjectPurchase getByCheckoutSessionId(String checkoutSessionId) {
         if (checkoutSessionId == null || checkoutSessionId.isBlank()) return null;
         return SelectionManager.select(PhotonEngine.DATA_BASE, PurchaseTable.class)
-            .where(Expression.of("checkout_session_id").isEqualTo(checkoutSessionId.trim()))
+            .where(Expressions.isEqualTo("checkout_session_id", checkoutSessionId.trim()))
             .limit(1)
             .executeSerializable(ObjectPurchase.class);
     }
@@ -166,7 +166,7 @@ public class PurchaseTable extends Table {
     public static List<ObjectPurchase> getByAccountUuid(String accountUuid) {
         if (accountUuid == null || accountUuid.isBlank()) return List.of();
         return SelectionManager.select(PhotonEngine.DATA_BASE, PurchaseTable.class)
-            .where(Expression.of("linked_account_uuid").isEqualTo(accountUuid))
+            .where(Expressions.isEqualTo("linked_account_uuid", accountUuid))
             .executeList(ObjectPurchase.class);
     }
 
@@ -210,7 +210,7 @@ public class PurchaseTable extends Table {
             .set("redeemed_at", new Date())
             .set("status", StripePurchaseStatus.ACTIVE)
             .set("updated_at", new Date())
-            .where(Expression.of("purchase_token").isEqualTo(PURCHASE.purchaseToken()))
+            .where(Expressions.isEqualTo("purchase_token", PURCHASE.purchaseToken()))
             .execute();
         return true;
     }

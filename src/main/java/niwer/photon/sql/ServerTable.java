@@ -9,7 +9,7 @@ import niwer.photon.PhotonEngine;
 import niwer.photon.objects.ObjectServer;
 import niwer.photon.util.PhotonLogTypes;
 import niwer.queryon.DataBase;
-import niwer.queryon.queries.Expression;
+import niwer.queryon.queries.Expressions;
 import niwer.queryon.queries.interaction.InsertionManager;
 import niwer.queryon.queries.interaction.SelectionManager;
 import niwer.queryon.queries.interaction.UpdateManager;
@@ -40,8 +40,8 @@ public class ServerTable extends Table {
                 .set("site_url", server.site)
                 .set("discord", server.discord)
                 .set("project_id", server.projectId)
-                .where(Expression.of("server_ip").isEqualTo(server.serverIP))
-                .where(Expression.of("server_port").isEqualTo(server.serverPort))
+                .where(Expressions.isEqualTo("server_ip", server.serverIP))
+                .where(Expressions.isEqualTo("server_port", server.serverPort))
                 .execute();
         } else {
             InsertionManager.insert(PhotonEngine.DATA_BASE, ServerTable.class, server)
@@ -85,7 +85,10 @@ public class ServerTable extends Table {
         if (ip == null || ip.isBlank() || port <= 0) return null;
         try {
             return SelectionManager.select(PhotonEngine.DATA_BASE, ServerTable.class)
-                .where(Expression.of("server_ip").isEqualTo(ip).and(Expression.of("server_port").isEqualTo(port)))
+                .where(Expressions.and(
+                    Expressions.isEqualTo("server_ip", ip),
+                    Expressions.isEqualTo("server_port", port)
+                ))
                 .limit(1)
                 .executeSerializable(ObjectServer.class);
         } catch (Exception e) {
@@ -96,7 +99,10 @@ public class ServerTable extends Table {
     private static boolean exists(String serverIP, int serverPort) {
         try {
             return SelectionManager.select(PhotonEngine.DATA_BASE, ServerTable.class, "COUNT(*) as count")
-                .where(Expression.of("server_ip").isEqualTo(serverIP).and(Expression.of("server_port").isEqualTo(serverPort)))
+                .where(Expressions.and(
+                    Expressions.isEqualTo("server_ip", serverIP),
+                    Expressions.isEqualTo("server_port", serverPort)
+                ))
                 .executeHasResult();
         } catch (Exception e) {
             return false;

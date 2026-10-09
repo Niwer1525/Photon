@@ -19,7 +19,7 @@
                         <h3 class="text-accent"><i class="fa-solid fa-basket-shopping"></i> Purchase Detected</h3>
                         <p class="text-sm">We noticed you have a pending checkout session. Sign in or register to link it automatically.</p>
                     </div>
-                    <button class="btn primary" onclick="UI.openModal('authModal')">Link Account</button>
+                    <button class="btn primary">Link Account</button>
                 </div>
             </div>
             <div class="panel">
@@ -51,7 +51,7 @@
             <div class="panel">
                 <div class="panel-header">
                     <h2><i class="fa-solid fa-key text-accent"></i> License Management</h2>
-                    <button class="btn primary" onclick="UI.openModal('createLicenseModal')"><i class="fa-solid fa-plus"></i> New License</button>
+                    <button id="btnCreateLicenseModal" class="btn primary"><i class="fa-solid fa-plus"></i> New License</button>
                 </div>
                 <div class="table-container">
                     <table>
@@ -105,11 +105,19 @@
             <div class="panel">
                 <div class="panel-header">
                     <h2><i class="fa-solid fa-user text-accent"></i> Your Profile</h2>
-                    <button class="btn primary icon-btn" title="Edit Profile" onclick="UI.openModal('editProfileModal')"><i class="fa-solid fa-pen"></i></button>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button class="btn icon-btn" id="btnSetup2FA" title="Configure 2FA" onclick="App.open2FASetup()">
+                            <i class="fa-solid fa-shield-halved"></i>
+                        </button>
+                        <button id="btnEditProfile" class="btn primary icon-btn" title="Edit Profile">
+                            <i class="fa-solid fa-pen"></i>
+                        </button>
+                        <button id="btnDeleteAccount" class="btn danger icon-btn" title="Delete Account" style="color: var(--danger-color, #ef4444);">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
                 </div>
-                <div class="grid grid-cols-2" id="profileDetailsGrid">
-                    <!-- Dynamic properties injected by JS -->
-                </div>
+                <div class="grid grid-cols-2" id="profileDetailsGrid"></div>
             </div>
         </section>
     </main>
@@ -119,12 +127,15 @@
 
     <!-- Modals -->
     <inc-auth-modal></inc-auth-modal>
+    <inc-totp-setup-modal></inc-totp-setup-modal>
     <inc-create-license-modal></inc-create-license-modal>
     <inc-edit-profile-modal></inc-edit-profile-modal>
+    <inc-delete-account-modal></inc-delete-account-modal>
 
-    <div id="toast-container"></div><!-- Toast Container -->
-    <script src="js/common.inc.js"></script>
-    <script src="js/modals.inc.js"></script>
-    <script src="js/main.js"></script>
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
+
+    <!-- Script -->
+    <script type="module" src="js/app.js"></script>
 </body>
 </html>

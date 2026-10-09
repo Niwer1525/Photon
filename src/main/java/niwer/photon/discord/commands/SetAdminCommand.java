@@ -6,7 +6,9 @@ import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import niwer.photon.Directories;
 import niwer.photon.discord.BotEngine;
+import niwer.photon.objects.ObjectUserAccount;
 import niwer.photon.sql.PlayerAccountTable;
+import niwer.photon.sql.PlayerAccountTable.AccountDeletionStatus;
 
 /**
  * @author Niwer
@@ -44,6 +46,25 @@ public class SetAdminCommand extends AbstractSlashCommand {
 
         /* Get the admin status */
         final boolean IS_ADMIN = event.getOption("administrator") != null && event.getOption("administrator").getAsBoolean();
+
+        /* Get the Player Account */
+        final ObjectUserAccount ACCOUNT = PlayerAccountTable.getAccountByUUID(UUID.trim());
+        if(ACCOUNT == null) {
+            event.reply("No account found with the provided UUID: `" + UUID + "`.").setEphemeral(true).queue();
+            return;
+        }
+        if(ACCOUNT.isAdministrator() == IS_ADMIN) {
+            event.reply("The account with UUID `" + UUID + "` is already " + (IS_ADMIN ? "an admin" : "not an admin") + ".").setEphemeral(true).queue();
+            return;
+        }
+        if(ACCOUNT.getDeletionStatus() == AccountDeletionStatus.PENDING_DELETION) {
+            event.reply("The account with UUID `" + UUID + "` is pending deletion and cannot be modified.").setEphemeral(true).queue();
+            return;
+        }
+        if(!ACCOUNT.isTotpEnabled()) {
+            event.reply("The account with UUID `" + UUID + "` does not have 2FA enabled. For security reasons, you cannot set an account as admin without 2FA enabled.").setEphemeral(true).queue();
+            return;
+        }
 
         /* Set the account as admin */
         PlayerAccountTable.setAdmin(UUID.trim(), IS_ADMIN);

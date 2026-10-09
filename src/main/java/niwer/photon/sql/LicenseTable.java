@@ -10,7 +10,7 @@ import niwer.photon.util.PhotonLogTypes;
 import niwer.photon.util.license.LicenseManager;
 import niwer.queryon.DataBase;
 import niwer.queryon.QueryonException;
-import niwer.queryon.queries.Expression;
+import niwer.queryon.queries.Expressions;
 import niwer.queryon.queries.interaction.InsertionManager;
 import niwer.queryon.queries.interaction.SelectionManager;
 import niwer.queryon.queries.interaction.UpdateManager;
@@ -47,7 +47,7 @@ public class LicenseTable extends Table {
 	public static ObjectLicense getByKey(String licenseKey) {
 		if (licenseKey == null || licenseKey.isBlank()) return null;
 		return SelectionManager.select(PhotonEngine.DATA_BASE, LicenseTable.class)
-			.where(Expression.of("license_key").isEqualTo(LicenseManager.normalizeKey(licenseKey)))
+			.where(Expressions.isEqualTo("license_key", LicenseManager.normalizeKey(licenseKey)))
 			.limit(1)
 			.executeSerializable(ObjectLicense.class);
 	}
@@ -61,7 +61,7 @@ public class LicenseTable extends Table {
 	public static List<ObjectLicense> getByCreatorUuid(String creatorUuid) {
 		if (creatorUuid == null || creatorUuid.isBlank()) return List.of();
 		return SelectionManager.select(PhotonEngine.DATA_BASE, LicenseTable.class)
-			.where(Expression.of("creator_uuid").isEqualTo(creatorUuid))
+			.where(Expressions.isEqualTo("creator_uuid", creatorUuid))
 			.executeList(ObjectLicense.class);
 	}
 
@@ -72,7 +72,7 @@ public class LicenseTable extends Table {
                 .set("hwid", hwid)
                 .set("status", LicenseStatus.ACTIVE)
                 .set("activated_at", new Date())
-                .where(Expression.of("license_key").isEqualTo(LicenseManager.normalizeKey(licenseKey)))
+                .where(Expressions.isEqualTo("license_key", LicenseManager.normalizeKey(licenseKey)))
                 .execute();
             return true;
         } catch(QueryonException e) {
@@ -86,7 +86,7 @@ public class LicenseTable extends Table {
         try {
             UpdateManager.update(PhotonEngine.DATA_BASE, LicenseTable.class)
                 .set("status", LicenseStatus.REVOKED)
-                .where(Expression.of("license_key").isEqualTo(LicenseManager.normalizeKey(licenseKey)))
+                .where(Expressions.isEqualTo("license_key", LicenseManager.normalizeKey(licenseKey)))
                 .execute();
             return true;
         } catch(QueryonException e) {

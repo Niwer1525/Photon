@@ -9,7 +9,7 @@ import niwer.photon.util.HashUtils;
 import niwer.photon.util.PhotonLogTypes;
 import niwer.photon.util.TranslationManager.Language;
 import niwer.queryon.DataBase;
-import niwer.queryon.queries.Expression;
+import niwer.queryon.queries.Expressions;
 import niwer.queryon.queries.interaction.DeletionManager;
 import niwer.queryon.queries.interaction.InsertionManager;
 import niwer.queryon.queries.interaction.SelectionManager;
@@ -23,6 +23,12 @@ import niwer.queryon.tables.Table;
  * @author Niwer
  */
 public class PlayerAccountTable extends Table {
+
+    public enum AccountDeletionStatus {
+        PENDING_DELETION,
+        DELETED,
+        NONE; // Account is not marked for deletion
+	}
 
     public PlayerAccountTable(DataBase db) {
         super(db);
@@ -67,12 +73,57 @@ public class PlayerAccountTable extends Table {
             Console.log("Cannot hash password for account creation").type(PhotonLogTypes.SQL).error().container(PhotonEngine.LOGGER).send();
             return null;
         }
-
+        
         InsertionManager.insert(PhotonEngine.DATA_BASE, PlayerAccountTable.class, "uuid", "username", "email", "password", "discordAuthCode")
             .row(UniqueUserID, username.trim(), email.trim().toLowerCase(), hashedPassword, ObjectUserAccount.generateAuthCode())
         .execute();
 
         return getAccountByUUID(UniqueUserID);
+    }
+
+    /**
+     * Flags an account as pending deletion with the current epoch timestamp.
+     * 
+     * @param uuid The unique identifier of the user
+     * @return true if updated successfully
+     */
+    public static boolean markPendingDeletion(String uuid) {
+        if (uuid == null || uuid.trim().isEmpty()) {
+            Console.log("Cannot flag deletion for null/empty UUID").error().container(PhotonEngine.LOGGER).send();
+            return false;
+        }
+
+        try {
+            UpdateManager.update(PhotonEngine.DATA_BASE, PlayerAccountTable.class)
+                .set("deletedAt", System.currentTimeMillis())
+                .set("deletionStatus", AccountDeletionStatus.PENDING_DELETION)
+                .where(Expressions.isEqualTo("uuid", uuid))
+                .execute();
+            return true;
+        } catch (Exception e) {
+            Console.log("Failed to mark account for deletion: " + e.getMessage()).error().container(PhotonEngine.LOGGER).send();
+            return false;
+        }
+    }
+
+    /**
+     * Checks if the account is currently marked for deletion.
+     * 
+     * @param uuid The account UUID
+     * @return true if deletedAt is present and non-zero
+     */
+    public static boolean isPendingDeletion(String uuid) {
+        if (uuid == null || uuid.trim().isEmpty()) return false;
+
+        try {
+            final Long deletedAt = SelectionManager.select(PhotonEngine.DATA_BASE, PlayerAccountTable.class, "deletedAt")
+                .where(Expressions.isEqualTo("uuid", uuid))
+                .executePrimitive(Long.class);
+            return deletedAt != null && deletedAt > 0;
+        } catch(Exception e) {
+            Console.log("Failed to check deletion status for account " + uuid + ": " + e.getMessage()).error().container(PhotonEngine.LOGGER).send();
+        }
+        return false;
     }
 
     /**
@@ -84,7 +135,7 @@ public class PlayerAccountTable extends Table {
     public static boolean isAdmin(String uuid) {
         if (uuid == null || uuid.trim().isEmpty()) return false;
         final Boolean IS_ADMIN = SelectionManager.select(PhotonEngine.DATA_BASE, PlayerAccountTable.class, "administrator")
-            .where(Expression.of("uuid").isEqualTo(uuid))
+            .where(Expressions.isEqualTo("uuid", uuid))
             .executePrimitive(Boolean.class);
         return IS_ADMIN != null && IS_ADMIN;
     }
@@ -96,7 +147,7 @@ public class PlayerAccountTable extends Table {
         }
         UpdateManager.update(PhotonEngine.DATA_BASE, PlayerAccountTable.class)
             .set("administrator", isAdmin)
-            .where(Expression.of("uuid").isEqualTo(uuid))
+            .where(Expressions.isEqualTo("uuid", uuid))
             .execute();
     }
 
@@ -107,7 +158,7 @@ public class PlayerAccountTable extends Table {
         }
         UpdateManager.update(PhotonEngine.DATA_BASE, PlayerAccountTable.class)
             .set("discordID", discordID)
-            .where(Expression.of("uuid").isEqualTo(uuid))
+            .where(Expressions.isEqualTo("uuid", uuid))
             .execute();
     }
 
@@ -120,7 +171,7 @@ public class PlayerAccountTable extends Table {
     public static boolean discordExists(long discordId) {
         final String DISCORD_ID_STR = String.valueOf(discordId);
         final Integer COUNT = SelectionManager.select(PhotonEngine.DATA_BASE, PlayerAccountTable.class, "COUNT(*) as count")
-            .where(Expression.of("LOWER(discordID)").isEqualTo(DISCORD_ID_STR))
+            .where(Expressions.isEqualTo("LOWER(discordID)", DISCORD_ID_STR))
             .executePrimitive(Integer.class);
         return COUNT != null && COUNT > 0;
     }
@@ -138,7 +189,7 @@ public class PlayerAccountTable extends Table {
         }
         UpdateManager.update(PhotonEngine.DATA_BASE, PlayerAccountTable.class)
             .set("language", language.name())
-            .where(Expression.of("uuid").isEqualTo(uuid))
+            .where(Expressions.isEqualTo("uuid", uuid))
             .execute();
     }
 
@@ -156,7 +207,7 @@ public class PlayerAccountTable extends Table {
 
         UpdateManager.update(PhotonEngine.DATA_BASE, PlayerAccountTable.class)
             .set("language", newUserLanguage.name())
-            .where(Expression.of("discord_user_id").isEqualTo(discordUserID))
+            .where(Expressions.isEqualTo("discord_user_id", discordUserID))
             .execute();
     }
 
@@ -167,8 +218,11 @@ public class PlayerAccountTable extends Table {
      * @return List of Languages or null if user has no preferences
      */
     public static Language getLanguage(String discordIdOrAccountUUID) {
-        final var QUERY = SelectionManager.select(PhotonEngine.DATA_BASE, PlayerAccountTable.class, "language")
-            .where(Expression.of("discord_user_id").isEqualTo(discordIdOrAccountUUID).or(Expression.of("uuid").isEqualTo(discordIdOrAccountUUID)));
+        final var QUERY = SelectionManager.select(PhotonEngine.DATA_BASE, PlayerAccountTable.class, "language").where(
+            Expressions.or(
+                Expressions.isEqualTo("discord_user_id", discordIdOrAccountUUID),
+                Expressions.isEqualTo("uuid", discordIdOrAccountUUID)
+            ));
         
         if(!QUERY.executeHasResult()) return null; // No preferences found for the user
 
@@ -190,7 +244,7 @@ public class PlayerAccountTable extends Table {
             return null;
         }
         return SelectionManager.select(PhotonEngine.DATA_BASE, PlayerAccountTable.class)
-            .where(Expression.of("uuid").isEqualTo(uuid))
+            .where(Expressions.isEqualTo("uuid", uuid))
             .executeSerializable(ObjectUserAccount.class);
     }
 
@@ -208,7 +262,7 @@ public class PlayerAccountTable extends Table {
         }
         final String NORMALIZED_EMAIL = email.trim().toLowerCase();
         return SelectionManager.select(PhotonEngine.DATA_BASE, PlayerAccountTable.class)
-            .where(Expression.of("LOWER(email)").isEqualTo(NORMALIZED_EMAIL))
+            .where(Expressions.isEqualTo("email", NORMALIZED_EMAIL))
             .executeSerializable(ObjectUserAccount.class);
     }
 
@@ -226,7 +280,7 @@ public class PlayerAccountTable extends Table {
         }
         final String NORMALIZED_USERNAME = username.trim().toLowerCase();
         return SelectionManager.select(PhotonEngine.DATA_BASE, PlayerAccountTable.class)
-            .where(Expression.of("LOWER(username)").isEqualTo(NORMALIZED_USERNAME))
+            .where(Expressions.isEqualTo("username", NORMALIZED_USERNAME))
             .executeSerializable(ObjectUserAccount.class);
     }
 
@@ -242,7 +296,7 @@ public class PlayerAccountTable extends Table {
             return null;
         }
         return SelectionManager.select(PhotonEngine.DATA_BASE, PlayerAccountTable.class)
-            .where(Expression.of("discordID").isEqualTo(discordID))
+            .where(Expressions.isEqualTo("discordID", discordID))
             .executeSerializable(ObjectUserAccount.class);
     }
 
@@ -260,7 +314,7 @@ public class PlayerAccountTable extends Table {
         }
         final String NORMALIZED_EMAIL = email.trim().toLowerCase();
         final Integer count = SelectionManager.select(PhotonEngine.DATA_BASE, PlayerAccountTable.class, "COUNT(*) as count")
-            .where(Expression.of("LOWER(email)").isEqualTo(NORMALIZED_EMAIL))
+            .where(Expressions.isEqualTo("email", NORMALIZED_EMAIL))
             .executePrimitive(Integer.class);
         return count != null && count > 0;
     }
@@ -279,7 +333,7 @@ public class PlayerAccountTable extends Table {
         }
         final String NORMALIZED_USERNAME = username.trim().toLowerCase();
         final Integer count = SelectionManager.select(PhotonEngine.DATA_BASE, PlayerAccountTable.class, "COUNT(*) as count")
-            .where(Expression.of("LOWER(username)").isEqualTo(NORMALIZED_USERNAME))
+            .where(Expressions.isEqualTo("username", NORMALIZED_USERNAME))
             .executePrimitive(Integer.class);
         return count != null && count > 0;
     }
@@ -297,10 +351,10 @@ public class PlayerAccountTable extends Table {
             return false;
         }
         return SelectionManager.select(PhotonEngine.DATA_BASE, PlayerAccountTable.class, "COUNT(*) as count")
-            .where(
-                Expression.of("uuid").isEqualTo(givenUUID)
-                    .and(Expression.of("discordAuthCode").isEqualTo(givenAuthCode))
-            )
+            .where(Expressions.and(
+                Expressions.isEqualTo("uuid", givenUUID),
+                Expressions.isEqualTo("discordAuthCode", givenAuthCode)
+            ))
             .executeHasResult();
     }
 
@@ -315,7 +369,7 @@ public class PlayerAccountTable extends Table {
         }
         UpdateManager.update(PhotonEngine.DATA_BASE, PlayerAccountTable.class)
             .set("username", username.trim())
-            .where(Expression.of("uuid").isEqualTo(uuid))
+            .where(Expressions.isEqualTo("uuid", uuid))
             .execute();
     }
 
@@ -330,7 +384,7 @@ public class PlayerAccountTable extends Table {
         }
         UpdateManager.update(PhotonEngine.DATA_BASE, PlayerAccountTable.class)
             .set("email", email.trim().toLowerCase())
-            .where(Expression.of("uuid").isEqualTo(uuid))
+            .where(Expressions.isEqualTo("uuid", uuid))
             .execute();
     }
 
@@ -351,8 +405,24 @@ public class PlayerAccountTable extends Table {
 
         UpdateManager.update(PhotonEngine.DATA_BASE, PlayerAccountTable.class)
             .set("password", hashedPassword)
-        .where(Expression.of("uuid").isEqualTo(uuid))
-        .execute();
+            .where(Expressions.isEqualTo("uuid", uuid))
+            .execute();
+    }
+
+    public static void setTotpSecret(String uuid, String encryptedSecret) {
+        if (uuid == null || uuid.trim().isEmpty()) return;
+        UpdateManager.update(PhotonEngine.DATA_BASE, PlayerAccountTable.class)
+            .set("totpSecret", encryptedSecret)
+            .where(Expressions.isEqualTo("uuid", uuid))
+            .execute();
+    }
+
+    public static void setTotpEnabled(String uuid, boolean enabled) {
+        if (uuid == null || uuid.trim().isEmpty()) return;
+        UpdateManager.update(PhotonEngine.DATA_BASE, PlayerAccountTable.class)
+            .set("totpEnabled", enabled)
+            .where(Expressions.isEqualTo("uuid", uuid))
+            .execute();
     }
 
     /**
@@ -366,7 +436,7 @@ public class PlayerAccountTable extends Table {
             return;
         }
         DeletionManager.delete(PhotonEngine.DATA_BASE, PlayerAccountTable.class)
-            .where(Expression.of("uuid").isEqualTo(uuid))
+            .where(Expressions.isEqualTo("uuid", uuid))
             .execute();
     }
 }

@@ -1,5 +1,6 @@
 package niwer.photon.web.endpoints.accounts;
 
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import io.javalin.http.Context;
@@ -9,7 +10,7 @@ import niwer.photon.util.GsonUtils;
 import niwer.photon.util.HashUtils;
 import niwer.photon.util.session.Session;
 import niwer.photon.util.session.SessionManager;
-import niwer.photon.util.session.SessionManager.Scope;
+import niwer.photon.util.session.SessionScope;
 import niwer.photon.util.stripe.EntitlementManager;
 import niwer.photon.web.HttpMethod;
 import niwer.photon.web.endpoints.EndpointUtils;
@@ -31,39 +32,57 @@ public class AuthAccountEndpoint implements IEndpoint {
             return;
         }
 
-        /* Try to login as admin first */
-        final Session ADMIN_SESSION = SessionManager.login(CREDENTIALS.email, CREDENTIALS.password, Scope.ADMIN);
-        if (ADMIN_SESSION != null) {
-            setupAdminCookies(handler, ADMIN_SESSION);
-            handler.json(new LoginResponse(null, ADMIN_SESSION.account().payload(), true));
-            return;
-        }
-
-        /* Standard user auth. */
-        final ObjectUserAccount ACCOUNT = PlayerAccountTable.getAccountByEmail(CREDENTIALS.email);
-        if (ACCOUNT == null || !HashUtils.passwordMatches(ACCOUNT.password(), CREDENTIALS.password)) {
+        /* Fetch user and verify password */
+        final ObjectUserAccount account = PlayerAccountTable.getAccountByEmail(CREDENTIALS.email);
+        if (account == null || account.password() == null || !HashUtils.passwordMatches(account.password(), CREDENTIALS.password)) {
             handler.status(401).result("Invalid credentials or access denied");
             return;
         }
 
-        final String CHECKOUT_SESSION_ID = CREDENTIALS.token;
-        if (CHECKOUT_SESSION_ID != null && !CHECKOUT_SESSION_ID.isBlank()) {
-            if (!EntitlementManager.redeemPurchase(CHECKOUT_SESSION_ID, ACCOUNT)) {
+        /* Prevent login if account is pending deletion */
+        if (PlayerAccountTable.isPendingDeletion(account.getUuid())) {
+            handler.status(403).result("This account has been scheduled for deletion and cannot be accessed.");
+            return;
+        }
+
+        final boolean isAdmin = account.isAdministrator();
+
+        /* Enforce 2FA If enabled (or if user is admin), stop here and return challenge ticket */
+        if (account.isTotpEnabled() /* || isAdmin */) { //TODO: Maybe useful in the future to force admins to have 2FA enabled, but for now we allow it
+            // if (isAdmin && !account.isTotpEnabled()) {
+            //     handler.status(403).result("Administrator accounts must configure 2FA."); //TODO: Maybe useful in the future to force admins to have 2FA enabled, but for now we allow it
+            //     return;
+            // }
+
+            SessionScope scope = isAdmin ? SessionScope.ADMIN : SessionScope.USER;
+            String ticket = SessionManager.createPending2FA(account.getUuid(), scope, CREDENTIALS.token);
+
+            // Tell the frontend to switch to the 6-digit TOTP input
+            handler.json(Map.of(
+                "status", "2FA_REQUIRED",
+                "ticket", ticket
+            ));
+            return;
+        }
+
+        /* Normal login (only reached if 2FA is not enabled) */
+        if (CREDENTIALS.token != null && !CREDENTIALS.token.isBlank()) {
+            if (!EntitlementManager.redeemPurchase(CREDENTIALS.token, account)) {
                 handler.status(403).result("Invalid or expired purchase token");
                 return;
             }
         }
 
-        final Session USER_AUTH = SessionManager.login(CREDENTIALS.email, CREDENTIALS.password, Scope.USER);
+        final Session USER_AUTH = SessionManager.createSession(account, SessionScope.USER);
         if (USER_AUTH == null) {
-            handler.status(401).result("Invalid credentials or access denied");
+            handler.status(401).result("Failed to create session");
             return;
         }
 
-        handler.json(new LoginResponse(USER_AUTH.token(), ACCOUNT.payload(), false));
+        handler.json(new LoginResponse(USER_AUTH.token(), account.payload(), false));
     }
 
-    private static void setupAdminCookies(Context handler, Session session) {
+    public static void setupAdminCookies(Context handler, Session session) {
         try {
             final String ADMIN_COOKIE = "photon_admin=" + session.token() + "; HttpOnly; Path=/; Max-Age=3600; SameSite=Strict";
             handler.res().addHeader("Set-Cookie", ADMIN_COOKIE);
@@ -97,5 +116,5 @@ public class AuthAccountEndpoint implements IEndpoint {
     }
 
     private record Credentials(String email, String password, String token) {}
-    private record LoginResponse(String token, Object account, boolean isAdmin) {}
+    public record LoginResponse(String token, Object account, boolean isAdmin) {}
 }

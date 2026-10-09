@@ -7,6 +7,7 @@ import niwer.photon.objects.ObjectUserAccount;
 import niwer.photon.sql.PlayerAccountTable;
 import niwer.photon.util.GsonUtils;
 import niwer.photon.util.HashUtils;
+import niwer.photon.util.TotpManager;
 import niwer.photon.web.HttpMethod;
 import niwer.photon.web.endpoints.IEndpoint;
 
@@ -54,9 +55,22 @@ public class ChangePasswordEndpoint implements IEndpoint {
             return;
         }
 
+        // --- 2FA Verification Check ---
+        if (account.isTotpEnabled()) {
+            if (request.code == null || request.code.isBlank()) {
+                handler.status(403).result("2FA code required");
+                return;
+            }
+
+            if (!TotpManager.verifyCode(account.getTotpSecret(), request.code)) {
+                handler.status(401).result("Invalid 2FA code");
+                return;
+            }
+        }
+
         PlayerAccountTable.setPassword(account.getUuid(), request.newPassword);
         handler.json(account.payload());
     }
 
-    private record PasswordChangeRequest(String email, String currentPassword, String newPassword) {}
+    private record PasswordChangeRequest(String email, String currentPassword, String newPassword, String code) {}
 }

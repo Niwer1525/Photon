@@ -21,6 +21,7 @@ import niwer.lumen.Console;
 import niwer.photon.objects.ObjectProduct;
 import niwer.photon.objects.ObjectPurchase;
 import niwer.photon.util.GsonUtils;
+import niwer.photon.util.HashUtils;
 import niwer.photon.util.OperatingSystem;
 import niwer.photon.util.PhotonLogTypes;
 
@@ -51,11 +52,16 @@ public class Directories
 				configFile.createNewFile();
 				try (var WRITER = new FileWriter(configFile)) { WRITER.write(GsonUtils.PRETTY_GSON.toJson(NetworkConfig.DEFAULT)); }
 			}
-			final BufferedReader reader = new BufferedReader(new FileReader(configFile));
-			config = GsonUtils.PRETTY_GSON.fromJson(reader, NetworkConfig.class);
-			reader.close();
+
+			/* Read the file */
+			final BufferedReader READER = new BufferedReader(new FileReader(configFile));
+			config = GsonUtils.PRETTY_GSON.fromJson(READER, NetworkConfig.class);
+			READER.close();
+
 			if (config == null) config = new NetworkConfig();
 		} catch (IOException e) {}
+
+		save(); // Save the config file to ensure it is up-to-date
 	}
 
 	/**
@@ -147,9 +153,6 @@ public class Directories
 		@SerializedName("stripe_api_key") public String stripe_api_key = "";
 		@SerializedName("stripe_webhook_secret") public String stripe_webhook_signature = "";
 
-		/* Versions infos */
-		@SerializedName("mod_version") public String mod_version = "1.0.0";
-
 		@SerializedName("twitter_url") public String twitter_url = "https://twitter.com/";
 		@SerializedName("twitch_url") public String twitch_url = "https://twitch.tv/";
 		@SerializedName("youtube_url") public String youtube_url = "https://youtube.com/";
@@ -160,6 +163,10 @@ public class Directories
 		@SerializedName("terms_of_service_url") public String terms_of_service_url = "";
 		@SerializedName("terms_of_sale_url") public String terms_of_sale_url = "";
 		@SerializedName("privacy_policy_url") public String privacy_policy_url = "";
+
+		@SerializedName("account_retention_days") public int account_retention_days = 14; // Default retention period for deleted accounts (in days)
+		@SerializedName("totp_issuer") public String totp_issuer = "Photon";
+		@SerializedName("totp_secret") public String totp_secret = HashUtils.generateRandomSaltBase64(32); // Default TOTP secret (hashed for security)
 
 		public boolean isEmpty() {
 			return this.equals(NetworkConfig.DEFAULT);
@@ -212,6 +219,14 @@ public class Directories
 
 		public boolean isDevEnvironment() {
 			return isDevEnv;
+		}
+
+		public String getTotpIssuer() {
+			return totp_issuer != null && !totp_issuer.isBlank() ? totp_issuer : "Photon";
+		}
+
+		public byte[] getTotpSecretBytes() {
+			return totp_secret != null && !totp_secret.isBlank() ? Base64.getDecoder().decode(totp_secret) : new byte[0];
 		}
 	}
 }
