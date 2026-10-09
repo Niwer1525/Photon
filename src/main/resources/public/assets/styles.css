@@ -25,7 +25,7 @@
     --transition-speed: 0.3s;
 }
 
-html[data-theme="light"] {
+html[data-color-scheme="light"] {
     --bg-color: #f7f7fb;
     --surface-color: #ffffff;
     --surface-glass: rgba(255, 255, 255, 0.75);
