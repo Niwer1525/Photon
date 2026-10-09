@@ -26,6 +26,7 @@ import niwer.photon.sql.PlayerAccountTable;
 import niwer.photon.sql.PurchaseTable;
 import niwer.photon.sql.ServerTable;
 import niwer.photon.sql.SubscriptionTable;
+import niwer.photon.util.AccountRetentionPurger;
 import niwer.photon.util.PhotonLogTypes;
 import niwer.photon.util.TranslationManager;
 import niwer.photon.util.stripe.StripeStartupSync;
@@ -139,6 +140,9 @@ public class PhotonEngine {
             );
             if(Directories.getConfig().database_backup_on_startup) BACKUP_MANAGER.createBackup("startup-backup");
         }
+
+        /* Run the account retention purger */
+        AccountRetentionPurger.createPurgerScheduler();
 
         DATA_BASE.syncSchema(); // We're syncing the schema after the backup to ensure that the backup to avoid losing data.
 

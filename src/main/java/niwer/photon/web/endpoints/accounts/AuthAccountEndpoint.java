@@ -27,8 +27,7 @@ public class AuthAccountEndpoint implements IEndpoint {
         IEndpoint.setupRateLimit(handler, 5, TimeUnit.MINUTES);
 
         final Credentials CREDENTIALS = readCredentials(handler);
-        if (CREDENTIALS == null || CREDENTIALS.email == null || CREDENTIALS.password == null 
-                || CREDENTIALS.email.isBlank() || CREDENTIALS.password.isBlank()) {
+        if (CREDENTIALS == null || CREDENTIALS.email == null || CREDENTIALS.password == null || CREDENTIALS.email.isBlank() || CREDENTIALS.password.isBlank()) {
             handler.status(400).result("Missing or blank parameters");
             return;
         }
@@ -37,6 +36,12 @@ public class AuthAccountEndpoint implements IEndpoint {
         final ObjectUserAccount account = PlayerAccountTable.getAccountByEmail(CREDENTIALS.email);
         if (account == null || account.password() == null || !HashUtils.passwordMatches(account.password(), CREDENTIALS.password)) {
             handler.status(401).result("Invalid credentials or access denied");
+            return;
+        }
+
+        /* Prevent login if account is pending deletion */
+        if (PlayerAccountTable.isPendingDeletion(account.getUuid())) {
+            handler.status(403).result("This account has been scheduled for deletion and cannot be accessed.");
             return;
         }
 

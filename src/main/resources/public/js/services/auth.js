@@ -335,3 +335,52 @@ export async function loadEntitlements() {
         state.entitlements = [];
     }
 }
+
+export async function requestAccountDeletion(e) {
+    e.preventDefault();
+    const btn = e.target.querySelector('button[type="submit"]');
+    const originalText = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+    }
+
+    const formData = new FormData(e.target);
+    const payload = {
+        password: formData.get('password'),
+        confirmationPhrase: formData.get('confirmationPhrase'),
+        code: formData.get('code') ? formData.get('code').trim() : null
+    };
+
+    try {
+        // Use your API wrapper pointing to /accounts/delete_account
+        await api('/accounts/delete_account', {
+            method: 'DELETE',
+            body: JSON.stringify(payload)
+        });
+
+        // Close the modal and reset form
+        closeModal(null);
+        e.target.reset();
+
+        // Clear local credentials and session state matching logout()
+        state.token = '';
+        state.userToken = '';
+        state.account = null;
+        state.entitlements = [];
+        localStorage.removeItem('photon-account');
+        localStorage.removeItem('photon-user-token');
+
+        // Update UI and route to overview
+        updateAuthVisibility();
+        navigate('overview');
+        toast('Account scheduled for deletion. You have been logged out.', 'success');
+    } catch (err) {
+        toast(err.message || 'Failed to request account deletion', 'error');
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    }
+}

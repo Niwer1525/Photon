@@ -18,6 +18,7 @@ import niwer.photon.web.endpoints.accounts.AuthAccountEndpoint;
 import niwer.photon.web.endpoints.accounts.ChangePasswordEndpoint;
 import niwer.photon.web.endpoints.accounts.Confirm2FAEndpoint;
 import niwer.photon.web.endpoints.accounts.CreateAccountEndpoint;
+import niwer.photon.web.endpoints.accounts.DeleteAccountEndpoint;
 import niwer.photon.web.endpoints.accounts.Disable2FAEndpoint;
 import niwer.photon.web.endpoints.accounts.LogoutEndpoint;
 import niwer.photon.web.endpoints.accounts.MeEndpoint;
@@ -99,7 +100,9 @@ public class WebServerEngine {
                     IEndpoint.register(cfg, AccountEntitlementsEndpoint.class);
                     IEndpoint.register(cfg, MeEndpoint.class);
                     IEndpoint.register(cfg, ChangePasswordEndpoint.class);
+                    IEndpoint.register(cfg, DeleteAccountEndpoint.class);
                     IEndpoint.register(cfg, UpdateAccountSettingsEndpoint.class);
+                    
                     IEndpoint.register(cfg, AccountLicenseListEndpoint.class);
                     IEndpoint.register(cfg, AccountLicenseProductsEndpoint.class);
                     IEndpoint.register(cfg, AccountLicenseCreateEndpoint.class);

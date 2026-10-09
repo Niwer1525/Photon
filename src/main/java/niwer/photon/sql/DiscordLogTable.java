@@ -6,7 +6,7 @@ import net.dv8tion.jda.api.audit.ActionType;
 import niwer.photon.PhotonEngine;
 import niwer.photon.objects.ObjectDiscordLog;
 import niwer.queryon.DataBase;
-import niwer.queryon.queries.Expression;
+import niwer.queryon.queries.Expressions;
 import niwer.queryon.queries.interaction.DeletionManager;
 import niwer.queryon.queries.interaction.InsertionManager;
 import niwer.queryon.queries.interaction.SelectionManager;
@@ -52,31 +52,31 @@ public class DiscordLogTable extends Table {
 
     public static List<ObjectDiscordLog> getByDiscordUserID(String discordUserID) {
         return SelectionManager.select(PhotonEngine.DATA_BASE, DiscordLogTable.class)
-            .where(Expression.of("discord_user_id").isEqualTo(discordUserID))
+            .where(Expressions.isEqualTo("discord_user_id", discordUserID))
             .orderBy("timestamp", EnumOrder.ASC)
             .executeList(ObjectDiscordLog.class);
     }
 
     public static List<ObjectDiscordLog> getByGuild(String guildID) {
         return SelectionManager.select(PhotonEngine.DATA_BASE, DiscordLogTable.class)
-            .where(Expression.of("guild_id").isEqualTo(guildID))
+            .where(Expressions.isEqualTo("guild_id", guildID))
             .orderBy("timestamp", EnumOrder.DESC)
             .executeList(ObjectDiscordLog.class);
     }
 
     public static List<ObjectDiscordLog> getByGuildAndType(String guildID, ModerationType type) {
         return SelectionManager.select(PhotonEngine.DATA_BASE, DiscordLogTable.class)
-            .where(
-                Expression.of("guild_id").isEqualTo(guildID)
-                    .and(Expression.of("moderation_type").isEqualTo(type))
-            )
+            .where(Expressions.and(
+                Expressions.isEqualTo("guild_id", guildID),
+                Expressions.isEqualTo("moderation_type", type)
+            ))
             .orderBy("timestamp", EnumOrder.DESC)
             .executeList(ObjectDiscordLog.class);
     }
 
     public static void deleteByDiscordID(String discordID) {
         DeletionManager.delete(PhotonEngine.DATA_BASE, DiscordLogTable.class)
-            .where(Expression.of("discord_user_id").isEqualTo(discordID))
+            .where(Expressions.isEqualTo("discord_user_id", discordID))
             .execute();
     }
 }

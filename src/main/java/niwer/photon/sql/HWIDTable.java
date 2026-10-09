@@ -2,7 +2,7 @@ package niwer.photon.sql;
 
 import niwer.photon.PhotonEngine;
 import niwer.queryon.DataBase;
-import niwer.queryon.queries.Expression;
+import niwer.queryon.queries.Expressions;
 import niwer.queryon.queries.interaction.DeletionManager;
 import niwer.queryon.queries.interaction.InsertionManager;
 import niwer.queryon.queries.interaction.SelectionManager;
@@ -45,7 +45,7 @@ public class HWIDTable extends Table {
      */
     public static boolean exist(String userUUID) {
         return SelectionManager.select(PhotonEngine.DATA_BASE, HWIDTable.class, "userHWID")
-            .where(Expression.of("userUUID").isEqualTo(userUUID))
+            .where(Expressions.isEqualTo("userUUID", userUUID))
             .limit(1)
             .executeHasResult();
     }
@@ -58,7 +58,7 @@ public class HWIDTable extends Table {
      */
     public static String getHWID(String userUUID) {
         return SelectionManager.select(PhotonEngine.DATA_BASE, HWIDTable.class, "userHWID")
-            .where(Expression.of("userUUID").isEqualTo(userUUID))
+            .where(Expressions.isEqualTo("userUUID", userUUID))
             .limit(1)
             .executePrimitive(String.class);
     }
@@ -72,7 +72,10 @@ public class HWIDTable extends Table {
     public static void deleteHWID(String userUUID, String userHWID) {
         DeletionManager.delete(PhotonEngine.DATA_BASE, HWIDTable.class)
             .where(
-                Expression.of("userUUID").isEqualTo(userUUID).and(Expression.of("userHWID").isEqualTo(userHWID))
+                Expressions.and(
+                    Expressions.isEqualTo("userUUID", userUUID),
+                    Expressions.isEqualTo("userHWID", userHWID)
+                )
             )
             .execute();
     }

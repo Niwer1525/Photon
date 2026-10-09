@@ -112,6 +112,9 @@
                         <button id="btnEditProfile" class="btn primary icon-btn" title="Edit Profile">
                             <i class="fa-solid fa-pen"></i>
                         </button>
+                        <button id="btnDeleteAccount" class="btn danger icon-btn" title="Delete Account" style="color: var(--danger-color, #ef4444);">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
                     </div>
                 </div>
                 <div class="grid grid-cols-2" id="profileDetailsGrid"></div>
@@ -127,6 +130,7 @@
     <inc-totp-setup-modal></inc-totp-setup-modal>
     <inc-create-license-modal></inc-create-license-modal>
     <inc-edit-profile-modal></inc-edit-profile-modal>
+    <inc-delete-account-modal></inc-delete-account-modal>
 
     <!-- Toast Container -->
     <div id="toast-container"></div>

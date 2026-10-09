@@ -154,6 +154,29 @@ public final class SessionManager {
     }
 
     /**
+     * Revokes all active sessions (both USER and ADMIN scopes) and pending 2FA
+     * challenges associated with the provided user UUID.
+     * 
+     * @param uuid The unique identifier of the user
+     */
+    public static void revokeAllSessions(String uuid) {
+        if (uuid == null || uuid.isBlank()) return;
+
+        // Clear any lingering pending 2FA tickets
+        PENDING_2FA.values().removeIf(pending -> uuid.equals(pending.uuid()));
+
+        // Invalidate tokens across all scopes
+        for (SessionScope scope : SessionScope.values()) {
+            boolean modified = scope.sessions.entrySet().removeIf(entry -> {
+                SessionSnapshot snapshot = entry.getValue();
+                return snapshot != null && snapshot.account() != null && uuid.equals(snapshot.account().getUuid());
+            });
+
+            if (modified) scope.save();
+        }
+    }
+
+    /**
      * Retrieves the CSRF token associated with a given session token.
      * 
      * @param token The session token for which to retrieve the CSRF token

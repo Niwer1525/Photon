@@ -16,6 +16,7 @@ import dev.samstevens.totp.qr.ZxingPngQrGenerator;
 import dev.samstevens.totp.secret.DefaultSecretGenerator;
 import dev.samstevens.totp.time.SystemTimeProvider;
 import dev.samstevens.totp.util.Utils;
+import niwer.photon.Directories;
 
 /**
  * This class manages TOTP (Time-based One-Time Password) operations, including generating secrets, creating QR codes for authenticator apps, verifying codes, and encrypting/decrypting secrets.
@@ -52,7 +53,7 @@ public class TotpManager {
         QrData data = new QrData.Builder()
             .label(email)
             .secret(rawSecret)
-            .issuer("Photon")
+            .issuer(Directories.getConfig().getTotpIssuer())
             .algorithm(HashingAlgorithm.SHA1)
             .digits(6)
             .period(30)

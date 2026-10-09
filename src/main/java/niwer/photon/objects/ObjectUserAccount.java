@@ -5,6 +5,7 @@ import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.Map;
 
+import niwer.photon.sql.PlayerAccountTable.AccountDeletionStatus;
 import niwer.photon.util.TranslationManager.Language;
 import niwer.queryon.SQLSerializable;
 import niwer.queryon.tables.api.IColumnField;
@@ -45,6 +46,12 @@ public class ObjectUserAccount extends SQLSerializable<ObjectUserAccount> implem
     @IColumnField(name = "totpSecret")
     private String totpSecret; // Toptal One-Time Password (TOTP) for 2FA
 
+    @IColumnField(name = "deletionStatus", notNull = true, defaultValue = @IDefaultValue(value = "NONE"))
+	private AccountDeletionStatus deletionStatus = AccountDeletionStatus.NONE;
+
+    @IColumnField(name = "deletedAt", defaultValue = @IDefaultValue(value = "NULL"))
+    private Long deletedAt; // Timestamp of when the account was marked for deletion. Null if not marked for deletion.
+
     public static String generateAuthCode() { return new BigInteger(40, new SecureRandom()).toString(32); }
 
     public boolean hasDiscordLinked() { return this.discordID != null && !this.discordID.isEmpty(); }
@@ -76,6 +83,10 @@ public class ObjectUserAccount extends SQLSerializable<ObjectUserAccount> implem
 
     public String getTotpSecret() { return this.totpSecret; }
     public void setTotpSecret(String totpSecret) { this.totpSecret = totpSecret; }
+
+    public AccountDeletionStatus getDeletionStatus() { return this.deletionStatus; }
+
+    public Long getDeletedAt() { return this.deletedAt; }
 
     @Override 
     public Map<String, Object> payload() {

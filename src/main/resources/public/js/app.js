@@ -5,6 +5,7 @@ import './components/modals/auth-modal.js';
 import './components/modals/totp-setup-modal.js';
 import './components/modals/create-license-modal.js';
 import './components/modals/edit-profile-modal.js';
+import './components/modals/delete-account-modal.js';
 
 // Application Core
 import { state } from './state.js';
@@ -26,6 +27,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('btnSetup2FA')?.addEventListener('click', () => open2FASetup());
     document.getElementById('btnEditProfile')?.addEventListener('click', () => openModal('editProfileModal'));
     document.getElementById('btnCreateLicenseModal')?.addEventListener('click', () => openModal('createLicenseModal'));
+    document.getElementById('btnDeleteAccount')?.addEventListener('click', () => openModal('deleteAccountModal'));
 
     // Handle checkout session landing state
     if (state.purchaseToken && !state.account) {
