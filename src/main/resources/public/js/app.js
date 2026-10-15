@@ -13,7 +13,7 @@ import { initTheme } from './ui/theme.js';
 import { initRouter } from './ui/router.js';
 import { openModal } from './ui/modal.js';
 import { restoreSession, open2FASetup } from './services/auth.js';
-import { loadTableData } from './services/admin.js';
+import { executeAdminSql, loadTableData } from './services/admin.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     // Initialize Visual Theme and Navigation Routing
@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('tableSelector')?.addEventListener('change', () => loadTableData());
     document.getElementById('tableLimit')?.addEventListener('change', () => loadTableData());
     document.getElementById('btnRefreshTable')?.addEventListener('click', () => loadTableData());
+    document.getElementById('btnExecuteAdminSql')?.addEventListener('click', () => executeAdminSql());
     document.getElementById('btnSetup2FA')?.addEventListener('click', () => open2FASetup());
     document.getElementById('btnEditProfile')?.addEventListener('click', () => openModal('editProfileModal'));
     document.getElementById('btnCreateLicenseModal')?.addEventListener('click', () => openModal('createLicenseModal'));

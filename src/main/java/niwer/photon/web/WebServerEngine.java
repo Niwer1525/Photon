@@ -22,6 +22,7 @@ import niwer.photon.web.endpoints.accounts.DeleteAccountEndpoint;
 import niwer.photon.web.endpoints.accounts.Disable2FAEndpoint;
 import niwer.photon.web.endpoints.accounts.LogoutEndpoint;
 import niwer.photon.web.endpoints.accounts.MeEndpoint;
+import niwer.photon.web.endpoints.accounts.RefreshSessionEndpoint;
 import niwer.photon.web.endpoints.accounts.Setup2FAEndpoint;
 import niwer.photon.web.endpoints.accounts.UpdateAccountSettingsEndpoint;
 import niwer.photon.web.endpoints.accounts.licenses.AccountLicenseCreateEndpoint;
@@ -29,6 +30,7 @@ import niwer.photon.web.endpoints.accounts.licenses.AccountLicenseListEndpoint;
 import niwer.photon.web.endpoints.accounts.licenses.AccountLicenseProductsEndpoint;
 import niwer.photon.web.endpoints.accounts.licenses.AccountLicenseRevokeEndpoint;
 import niwer.photon.web.endpoints.admin.AdminTableDataEndpoint;
+import niwer.photon.web.endpoints.admin.AdminSqlEndpoint;
 import niwer.photon.web.endpoints.admin.AdminTablesEndpoint;
 import niwer.photon.web.endpoints.game.AddAntiCheatReportEndpoint;
 import niwer.photon.web.endpoints.game.AddCrashReportEndpoint;
@@ -88,6 +90,7 @@ public class WebServerEngine {
                     /* Admin panel */
                     IEndpoint.register(cfg, AdminTablesEndpoint.class);
                     IEndpoint.register(cfg, AdminTableDataEndpoint.class);
+                    IEndpoint.register(cfg, AdminSqlEndpoint.class);
                 }
                 {
                     /* Stripe */
@@ -99,6 +102,7 @@ public class WebServerEngine {
                     IEndpoint.register(cfg, CreateAccountEndpoint.class);
                     IEndpoint.register(cfg, LogoutEndpoint.class);
                     IEndpoint.register(cfg, AuthAccountEndpoint.class);
+                    IEndpoint.register(cfg, RefreshSessionEndpoint.class);
                     IEndpoint.register(cfg, AccountEntitlementsEndpoint.class);
                     IEndpoint.register(cfg, MeEndpoint.class);
                     IEndpoint.register(cfg, ChangePasswordEndpoint.class);

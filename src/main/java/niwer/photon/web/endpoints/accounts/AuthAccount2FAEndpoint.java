@@ -39,10 +39,10 @@ public class AuthAccount2FAEndpoint implements IEndpoint {
 
         if (isAdmin) {
             AuthAccountEndpoint.setupAdminCookies(handler, session);
-            handler.json(new AuthAccountEndpoint.LoginResponse(null, session.account().payload(), true));
+            handler.json(new AuthAccountEndpoint.LoginResponse(null, session.refreshToken(), session.account().payload(), true));
             return;
         }
 
-        handler.json(new AuthAccountEndpoint.LoginResponse(session.token(), session.account().payload(), false));
+        handler.json(new AuthAccountEndpoint.LoginResponse(session.token(), session.refreshToken(), session.account().payload(), false));
     }
 }

@@ -22,6 +22,20 @@ export async function loadTablesList() {
     }
 }
 
+export async function executeAdminSql() {
+    const input = document.getElementById('adminSql');
+    const output = document.getElementById('adminSqlResult');
+    if (!input || !output || !input.value.trim()) return;
+    if (!window.confirm('Run this restricted SQL? UPDATE statements are backed up first.')) return;
+    try {
+        const result = await api('/api/admin/sql', { method: 'POST', body: JSON.stringify({ sql: input.value }) });
+        output.textContent = JSON.stringify(result, null, 2);
+    } catch (error) {
+        output.textContent = error.message;
+        toast(error.message, 'error');
+    }
+}
+
 export async function loadTableData() {
     const table = document.getElementById('tableSelector')?.value;
     const limit = document.getElementById('tableLimit')?.value || 100;

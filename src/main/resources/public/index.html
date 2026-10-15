@@ -76,6 +76,14 @@
         <section id="page-admin" class="page">
             <div class="panel">
                 <div class="panel-header">
+                    <h2><i class="fa-solid fa-terminal text-accent"></i> Safe SQL</h2>
+                </div>
+                <textarea id="adminSql" rows="4" maxlength="2000" placeholder="SELECT * FROM Account LIMIT 10"></textarea>
+                <button class="btn primary" id="btnExecuteAdminSql">Run SQL</button>
+                <pre id="adminSqlResult" class="text-secondary" style="white-space: pre-wrap; max-height: 300px; overflow: auto;"></pre>
+            </div>
+            <div class="panel">
+                <div class="panel-header">
                     <h2><i class="fa-solid fa-database text-accent"></i> Data Tables</h2>
                     <div style="display: flex; gap: 0.75rem; align-items: center;">
                         <select id="tableSelector" onchange="App.loadTableData()" style="width: auto; min-width: 200px; cursor: pointer;"></select>

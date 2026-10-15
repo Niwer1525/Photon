@@ -15,7 +15,11 @@ public final class SessionManager {
     private static final Map<String, Pending2FA> PENDING_2FA = new ConcurrentHashMap<>();
 
     static {
-        for (SessionScope scope : SessionScope.values()) scope.load();
+        for (SessionScope scope : SessionScope.values()) {
+            scope.load();
+            scope.sessions.clear();
+            scope.save();
+        }
     }
 
     private SessionManager() {}
@@ -82,11 +86,30 @@ public final class SessionManager {
         if (account == null) return null;
 
         String token = UUID.randomUUID().toString();
+        String refreshToken = UUID.randomUUID().toString();
         String csrf = (scope == SessionScope.ADMIN) ? UUID.randomUUID().toString() : null;
 
-        scope.sessions.put(token, new SessionSnapshot(account, System.currentTimeMillis(), csrf));
+        scope.sessions.put(token, new SessionSnapshot(account, System.currentTimeMillis(), csrf, refreshToken));
         scope.save();
-        return new Session(token, account);
+        return new Session(token, refreshToken, account);
+    }
+
+    public static Session refreshSession(String refreshToken) {
+        if (refreshToken == null || refreshToken.isBlank()) return null;
+
+        for (SessionScope scope : SessionScope.values()) {
+            for (Map.Entry<String, SessionSnapshot> entry : scope.sessions.entrySet()) {
+                SessionSnapshot snapshot = entry.getValue();
+                if (snapshot == null || !refreshToken.equals(snapshot.refreshToken())) continue;
+
+                ObjectUserAccount account = snapshot.account();
+                if (account == null || account.getUuid() == null) return null;
+                scope.sessions.remove(entry.getKey(), snapshot);
+                scope.save();
+                return createSession(account, scope);
+            }
+        }
+        return null;
     }
 
     private static ObjectUserAccount accountFromRequest(Context handler, SessionScope scope) {

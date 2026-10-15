@@ -11,13 +11,13 @@ import niwer.photon.web.endpoints.IEndpoint;
 public class AdminTablesEndpoint implements IEndpoint {
 
     private static final List<TableInfo> TABLES = List.of(
-        new TableInfo("Server", "Servers", "Saved server status rows"),
-        new TableInfo("Account", "Accounts", "Registered player accounts"),
-        new TableInfo("License", "Licenses", "Issued licenses"),
-        new TableInfo("HWID", "HWIDs", "HWID bindings"),
-        new TableInfo("CrashReport", "Crash reports", "Stored crash reports"),
-        new TableInfo("AnticheatReport", "Anti-cheat reports", "Stored anti-cheat reports"),
-        new TableInfo("DiscordLog", "Discord logs", "Moderation logs")
+        new TableInfo("Server", "Server", "Saved server status rows"),
+        new TableInfo("Account", "Account", "Registered player accounts"),
+        new TableInfo("License", "License", "Issued licenses"),
+        new TableInfo("HWID", "HWID", "HWID bindings"),
+        new TableInfo("CrashReport", "CrashReport", "Stored crash reports"),
+        new TableInfo("AnticheatReport", "AnticheatReport", "Stored anti-cheat reports"),
+        new TableInfo("DiscordLog", "DiscordLog", "Moderation logs")
     );
 
     @Override public String path() { return "/api/admin/tables"; }

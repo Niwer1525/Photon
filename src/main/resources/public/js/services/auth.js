@@ -13,19 +13,27 @@ export function clearPurchaseToken() {
 }
 
 export async function restoreSession() {
-    if (state.purchaseToken && (state.userToken || state.account || state.token)) {
+    if (state.purchaseToken && (state.userToken || state.refreshToken || state.account || state.token)) {
         await logout();
         return;
     }
 
-    if (state.userToken && !state.token) {
+    if (state.account) {
         try {
             const account = await api('/accounts/me');
             state.account = account;
             await loadEntitlements();
             localStorage.setItem('photon-account', JSON.stringify(account));
         } catch {
-            // Token expired or invalid
+            state.token = '';
+            state.userToken = '';
+            state.refreshToken = '';
+            state.account = null;
+            state.entitlements = [];
+            localStorage.removeItem('photon-account');
+            localStorage.removeItem('photon-user-token');
+            localStorage.removeItem('photon-refresh-token');
+            document.getElementById('authModal')?.classList.add('open');
         }
     }
 
@@ -161,9 +169,11 @@ export async function register(e) {
         });
 
         state.userToken = res.token || '';
+        state.refreshToken = res.refreshToken || '';
         state.account = res.account || res;
         await loadEntitlements();
         localStorage.setItem('photon-user-token', state.userToken);
+        localStorage.setItem('photon-refresh-token', state.refreshToken);
         localStorage.setItem('photon-account', JSON.stringify(state.account));
 
         clearPurchaseToken();
@@ -195,6 +205,8 @@ export async function handleLoginSuccessPayload(payload) {
         await loadEntitlements();
         toast('Signed in', 'success');
     }
+    state.refreshToken = payload.refreshToken || '';
+    localStorage.setItem('photon-refresh-token', state.refreshToken);
 
     clearPurchaseToken();
     closeModal(null);
@@ -205,10 +217,12 @@ export async function logout() {
     await api('/accounts/logout', { method: 'POST' }).catch(() => {});
     state.token = '';
     state.userToken = '';
+    state.refreshToken = '';
     state.account = null;
     state.entitlements = [];
     localStorage.removeItem('photon-account');
     localStorage.removeItem('photon-user-token');
+    localStorage.removeItem('photon-refresh-token');
     updateAuthVisibility();
     navigate('overview');
     toast('Logged out');
@@ -365,10 +379,12 @@ export async function requestAccountDeletion(e) {
         // Clear local credentials and session state matching logout()
         state.token = '';
         state.userToken = '';
+        state.refreshToken = '';
         state.account = null;
         state.entitlements = [];
         localStorage.removeItem('photon-account');
         localStorage.removeItem('photon-user-token');
+        localStorage.removeItem('photon-refresh-token');
 
         // Update UI and route to overview
         updateAuthVisibility();

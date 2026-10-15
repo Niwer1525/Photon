@@ -95,7 +95,7 @@ public class CreateAccountEndpoint implements IEndpoint {
             return;
         }
 
-        handler.json(new LoginResponse(SESSION.token(), ACCOUNT.payload()));
+        handler.json(new LoginResponse(SESSION.token(), SESSION.refreshToken(), ACCOUNT.payload()));
     }
 
     private static boolean validEmailAddress(String email) {
@@ -103,5 +103,5 @@ public class CreateAccountEndpoint implements IEndpoint {
         return EMAIL_PATTERN.matcher(email).matches();
 	}
 
-    private record LoginResponse(String token, Object account) {}
+    private record LoginResponse(String token, String refreshToken, Object account) {}
 }

@@ -44,6 +44,7 @@ import niwer.queryon.backup.DatabaseBackupManager;
 public class PhotonEngine {
 
     private static volatile String currentIP = null;
+    private static volatile DatabaseBackupManager backupManager = null;
 
     public static final DataBase DATA_BASE = new DataBase(Directories.DATA_BASE_FILE);
     public static final Container LOGGER = LumenEngine.registerContainer("PhotonEngine").addProcessor((data, time, formattedMessage) -> {
@@ -134,14 +135,18 @@ public class PhotonEngine {
 
         /* Run the database backup system */
         if(Directories.getConfig().database_backup_enabled) {
-            if(!Directories.BACKUPS_DIR.exists()) Directories.BACKUPS_DIR.mkdirs();
-            final DatabaseBackupManager BACKUP_MANAGER = DatabaseBackupManager.createWithScheduler(DATA_BASE, Directories.BACKUPS_DIR, 
+            if(!Directories.BACKUPS_DIR.exists()) Directories.BACKUPS_DIR.mkdirs(); // Ensure that the backups directory exists
+
+            /* Create a backup manager with a scheduler */
+            backupManager = DatabaseBackupManager.createWithScheduler(DATA_BASE, Directories.BACKUPS_DIR, 
                 Directories.getConfig().dbBackupFilePrefix(),
                 (int)Directories.getConfig().database_backup_retention_days,
                 Directories.getConfig().database_backup_interval_minutes
             );
+
+            /* Create a backup on startup if enabled */
             if(Directories.getConfig().database_backup_on_startup)
-                BACKUP_MANAGER.createBackup("startup-backup");
+                backupManager.createBackup("startup-backup");
         }
 
         /* Run the account retention purger */
@@ -164,4 +169,6 @@ public class PhotonEngine {
         /* Log that the network server is running */
         Console.log("Network Server is now running and waiting for connections...").type(PhotonLogTypes.NETWORK).sendToProcessor().container(PhotonEngine.LOGGER).send();
     }
+
+    public static DatabaseBackupManager backupManager() { return backupManager; }
 }

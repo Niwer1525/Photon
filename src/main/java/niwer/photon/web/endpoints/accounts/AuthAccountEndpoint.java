@@ -73,13 +73,18 @@ public class AuthAccountEndpoint implements IEndpoint {
             }
         }
 
-        final Session USER_AUTH = SessionManager.createSession(account, SessionScope.USER);
-        if (USER_AUTH == null) {
+        final Session AUTH = SessionManager.createSession(account, isAdmin ? SessionScope.ADMIN : SessionScope.USER);
+        if (AUTH == null) {
             handler.status(401).result("Failed to create session");
             return;
         }
 
-        handler.json(new LoginResponse(USER_AUTH.token(), account.payload(), false));
+        if (isAdmin) {
+            setupAdminCookies(handler, AUTH);
+            handler.json(new LoginResponse(null, AUTH.refreshToken(), account.payload(), true));
+        } else {
+            handler.json(new LoginResponse(AUTH.token(), AUTH.refreshToken(), account.payload(), false));
+        }
     }
 
     public static void setupAdminCookies(Context handler, Session session) {
@@ -116,5 +121,5 @@ public class AuthAccountEndpoint implements IEndpoint {
     }
 
     private record Credentials(String email, String password, String token) {}
-    public record LoginResponse(String token, Object account, boolean isAdmin) {}
+    public record LoginResponse(String token, String refreshToken, Object account, boolean isAdmin) {}
 }

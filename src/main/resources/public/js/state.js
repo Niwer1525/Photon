@@ -4,6 +4,7 @@
 export const state = {
     token: '',
     userToken: localStorage.getItem('photon-user-token') || '',
+    refreshToken: localStorage.getItem('photon-refresh-token') || '',
     account: JSON.parse(localStorage.getItem('photon-account')) || null,
     pending2FATicket: '',
     purchaseToken: new URLSearchParams(window.location.search).get('token') || '',
