@@ -20,7 +20,8 @@ public class LicenseTable extends Table {
 	public enum LicenseStatus {
 		ISSUED,
 		ACTIVE,
-		REVOKED;
+		REVOKED,
+		EXPIRED;
 	}
 
 	public LicenseTable(DataBase db) {
@@ -29,6 +30,22 @@ public class LicenseTable extends Table {
 	}
 
 	@Override public String name() { return "License"; }
+
+	/**
+	 * Check for expired licenses and mark them as "EXPIRED"
+	 */
+	public static void checkExpired() {
+		// UpdateManager.update(PhotonEngine.DATA_BASE, LicenseTable.class)
+		// 	.set("status", LicenseStatus.EXPIRED)
+		// 	.where(Expressions.isLessThan("expires_at", new Date())) // If the expiration date is less than the current date, mark it as expired
+		// 	.where(
+		// 		Expressions.or(
+		// 			Expressions.isEqualTo("status", LicenseStatus.ACTIVE),
+		// 			Expressions.isEqualTo("status", LicenseStatus.ISSUED)
+		// 		)
+		// 	) // Only update licenses that are currently active or issued, not those that are already revoked or expired
+		// 	.execute();
+	}
 
 	public static ObjectLicense issueLicense(String licenseKey, String productId, String name, String customerEmail, String creatorUuid, Date expiresAt) {
 		InsertionManager.insert(PhotonEngine.DATA_BASE, LicenseTable.class, "license_key", "product_id", "name", "customer_email", "creator_uuid", "status", "created_at", "expires_at")

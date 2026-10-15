@@ -41,6 +41,7 @@ import niwer.photon.web.endpoints.stripe.StripePurchaseSessionEndpoint;
 import niwer.photon.web.endpoints.stripe.StripeWebhookEndpoint;
 import niwer.photon.web.endpoints.updates.DownloadEndpoint;
 import niwer.photon.web.endpoints.updates.GetAssetsEndpoint;
+import niwer.photon.web.endpoints.updates.GetProductLatestVersionEndpoint;
 
 public class WebServerEngine {
 
@@ -75,6 +76,7 @@ public class WebServerEngine {
                 IEndpoint.register(cfg, LicenseValidateEndpoint.class);
                 IEndpoint.register(cfg, DownloadEndpoint.class);
                 IEndpoint.register(cfg, GetAssetsEndpoint.class);
+                IEndpoint.register(cfg, GetProductLatestVersionEndpoint.class);
                 {
                     /* 2FA */
                     IEndpoint.register(cfg, Setup2FAEndpoint.class);

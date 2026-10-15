@@ -18,11 +18,13 @@ export async function loadLicenses() {
         }
 
         tbody.innerHTML = licenses.map((l) => {
+            console.log('License:', l);
             const status = String(l.status || l.state || 'UNKNOWN').toUpperCase();
+            const isExpired = status === 'EXPIRED' || (l.expiresAt && new Date(l.expiresAt) < new Date());
             const isRevoked = status === 'REVOKED';
-            const badgeClass = status === 'ACTIVE' ? 'active' : (isRevoked ? 'danger' : '');
+            const badgeClass = status === 'ACTIVE' ? 'active' : (isRevoked || isExpired ? 'danger' : '');
             const key = l.licenseKey || l.key || '';
-
+            console.log('License Key:', key, 'Status:', status, 'Expired:', isExpired, 'Revoked:', isRevoked);
             return `
                 <tr>
                     <td>
@@ -43,7 +45,7 @@ export async function loadLicenses() {
                     <td><span class="badge ${badgeClass}">${escapeHTML(status)}</span></td>
                     <td>
                         <div style="display: flex; gap: 0.5rem;">
-                            ${!isRevoked ? `
+                            ${!isRevoked && !isExpired ? `
                                 <button class="icon-btn copy-key-btn" data-key="${escapeHTML(key)}" title="Copy Key">
                                     <i class="fa-regular fa-copy"></i>
                                 </button>

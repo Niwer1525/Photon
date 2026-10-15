@@ -3,9 +3,12 @@ package niwer.photon.web.endpoints.servers;
 import java.util.concurrent.TimeUnit;
 
 import io.javalin.http.Context;
+import niwer.lumen.Console;
+import niwer.photon.PhotonEngine;
 import niwer.photon.objects.ObjectServer;
 import niwer.photon.sql.ServerTable;
 import niwer.photon.util.GsonUtils;
+import niwer.photon.util.PhotonLogTypes;
 import niwer.photon.web.HttpMethod;
 import niwer.photon.web.endpoints.IEndpoint;
 
@@ -60,7 +63,8 @@ public class AddServerEndpoint implements IEndpoint {
         if (server.serverMOTD != null && server.serverMOTD.length() > 2048) server.serverMOTD = server.serverMOTD.substring(0, 2048);
 
         ServerTable.saveOrUpdate(server);
-        handler.status(200).json(server);
+        handler.status(200).result("Server added/updated successfully");
+        Console.log("Server %s:%d (%s) has been added/updated in the database", server.serverIP, server.serverPort, server.serverName).container(PhotonEngine.LOGGER).type(PhotonLogTypes.WEB_SERVER).send();
     }
 
 }

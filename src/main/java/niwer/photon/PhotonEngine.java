@@ -29,6 +29,7 @@ import niwer.photon.sql.SubscriptionTable;
 import niwer.photon.util.AccountRetentionPurger;
 import niwer.photon.util.PhotonLogTypes;
 import niwer.photon.util.TranslationManager;
+import niwer.photon.util.license.LicensePurger;
 import niwer.photon.util.stripe.StripeStartupSync;
 import niwer.photon.web.WebServerEngine;
 import niwer.queryon.DataBase;
@@ -133,16 +134,21 @@ public class PhotonEngine {
 
         /* Run the database backup system */
         if(Directories.getConfig().database_backup_enabled) {
+            if(!Directories.BACKUPS_DIR.exists()) Directories.BACKUPS_DIR.mkdirs();
             final DatabaseBackupManager BACKUP_MANAGER = DatabaseBackupManager.createWithScheduler(DATA_BASE, Directories.BACKUPS_DIR, 
                 Directories.getConfig().dbBackupFilePrefix(),
                 (int)Directories.getConfig().database_backup_retention_days,
                 Directories.getConfig().database_backup_interval_minutes
             );
-            if(Directories.getConfig().database_backup_on_startup) BACKUP_MANAGER.createBackup("startup-backup");
+            if(Directories.getConfig().database_backup_on_startup)
+                BACKUP_MANAGER.createBackup("startup-backup");
         }
 
         /* Run the account retention purger */
         AccountRetentionPurger.createPurgerScheduler();
+
+        /* Run the licenses purger */
+        LicensePurger.createPurgerScheduler();
 
         DATA_BASE.syncSchema(); // We're syncing the schema after the backup to ensure that the backup to avoid losing data.
 

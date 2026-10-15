@@ -12,6 +12,10 @@ import niwer.photon.sql.PlayerAccountTable.AccountDeletionStatus;
 import niwer.queryon.queries.Expressions;
 import niwer.queryon.queries.interaction.SelectionManager;
 
+/**
+ * This class is responsible for purging user accounts that have been marked for deletion and have exceeded the retention period defined in the configuration.
+ * It runs as a background thread and periodically checks for expired accounts to delete them from the database.
+ */
 public class AccountRetentionPurger implements Runnable {
 
     public static void createPurgerScheduler() {

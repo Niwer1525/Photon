@@ -2,6 +2,20 @@ import { api } from '../api/client.js';
 import { toast } from '../ui/toast.js';
 import { escapeHTML, formatVal, copyToClipboard } from '../ui/dom.js';
 
+/**
+ * This will make the first letter of each word in the productId uppercase and replace underscores with spaces.
+ * 
+ * @param {*} productId The productId to format.
+ */
+function formatProductId(productId) {
+    if (!productId) return 'Unknown';
+    return productId
+        .replace(/_/g, ' ')
+        .split(' ')
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+}
+
 export async function loadPublicServers() {
     const grid = document.getElementById('serverGrid');
     const countEl = document.getElementById('serverCount');
@@ -16,29 +30,52 @@ export async function loadPublicServers() {
             return;
         }
 
-        grid.innerHTML = servers.map((s) => `
-            <div class="card">
-                <div class="card-header">
-                    <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeHTML(s.serverName || 'Unknown')}">
-                        ${escapeHTML(s.serverName || 'Unknown Server')}
-                    </span>
-                </div>
-                <div class="card-body">
-                    <p style="margin-bottom:0">${escapeHTML(s.serverMOTD || 'No MOTD provided')}</p>
-                </div>
-                <div class="card-footer">
-                    <button class="btn icon-btn copy-ip-btn" data-ip="${s.serverIP}:${s.serverPort}" title="Copy IP">
-                        <i class="fa-regular fa-copy"></i>
-                    </button>
-                    ${s.site ? `<a href="${escapeHTML(s.site)}" target="_blank" rel="noopener" class="btn icon-btn"><i class="fa-solid fa-link"></i></a>` : ''}
-                    ${s.discord ? `<a href="${escapeHTML(s.discord)}" target="_blank" rel="noopener" class="btn icon-btn"><i class="fa-brands fa-discord"></i></a>` : ''}
-                </div>
-            </div>
-        `).join('');
+        // Group servers by productId
+        const groupedServers = (servers || []).reduce((acc, server) => {
+            console.log('Server:', server);
+            const key = formatProductId(server.productId || server.projectId) || 'Other / Community';
+            if (!acc[key]) acc[key] = [];
+            acc[key].push(server);
+            return acc;
+        }, {});
 
-        grid.querySelectorAll('.copy-ip-btn').forEach((btn) => {
-            btn.addEventListener('click', () => copyToClipboard(btn.dataset.ip));
+        // Generate HTML section for each productId
+        const sections = Object.entries(groupedServers).map(([productId, productServers]) => {
+            const cards = productServers.map((s) => `
+                <div class="card">
+                    <div class="card-header">
+                        <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeHTML(s.serverName || 'Unknown')}">
+                            ${escapeHTML(s.serverName || 'Unknown Server')}
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <p style="margin-bottom:0">${escapeHTML(s.serverMOTD || 'No MOTD provided')}</p>
+                    </div>
+                    <div class="card-footer">
+                        <button class="btn icon-btn copy-ip-btn" data-ip="${s.serverIP}:${s.serverPort}" title="Copy IP">
+                            <i class="fa-regular fa-copy"></i>
+                        </button>
+                        ${s.site ? `<a href="${escapeHTML(s.site)}" target="_blank" rel="noopener" class="btn icon-btn" title="Website"><i class="fa-solid fa-link"></i></a>` : ''}
+                        ${s.discord ? `<a href="${escapeHTML(s.discord)}" target="_blank" rel="noopener" class="btn icon-btn" title="Discord"><i class="fa-brands fa-discord"></i></a>` : ''}
+                    </div>
+                </div>
+            `).join('');
+
+            return `
+                <section class="server-group">
+                    <div class="server-group-header">
+                        <h3><i class="fa-solid fa-server text-accent"></i> ${escapeHTML(productId)}</h3>
+                    </div>
+                    <div class="server-cards-grid">
+                        ${cards}
+                    </div>
+                </section>
+            `;
         });
+
+        grid.innerHTML = sections.length 
+            ? sections.join('') 
+            : '<p class="text-secondary">No servers found.</p>';
     } catch {
         grid.innerHTML = `<p class="text-secondary text-danger" style="grid-column: 1/-1;">Failed to load servers.</p>`;
     }
