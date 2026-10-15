@@ -71,6 +71,7 @@ public class ObjectLicense extends SQLSerializable<ObjectLicense> implements IPa
 
 	public Date expiresAt() { return this.expiresAt; }
 
+	@Deprecated
 	private static Date parseDate(String value) {
 		if (value == null || value.isBlank()) return null;
 		if ("CURRENT_TIMESTAMP".equalsIgnoreCase(value)) return null;
@@ -87,6 +88,15 @@ public class ObjectLicense extends SQLSerializable<ObjectLicense> implements IPa
 		}
 
 		return null;
+	}
+
+	@Override
+	public String toString() {
+		return "ObjectLicense{" +
+			"licenseKey='" + licenseKey + '\'' +
+			", status=" + status +
+			", expiresAt=" + expiresAt +
+			'}';
 	}
 
 	@Override

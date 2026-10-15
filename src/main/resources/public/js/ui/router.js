@@ -1,5 +1,6 @@
 import { state } from '../state.js';
-import { loadPublicServers, loadDownloads, loadTablesList } from '../services/public.js';
+import { loadPublicServers, loadDownloads } from '../services/public.js';
+import { loadTablesList } from '../services/admin.js';
 import { loadLicenses } from '../services/licenses.js';
 
 export function initRouter() {

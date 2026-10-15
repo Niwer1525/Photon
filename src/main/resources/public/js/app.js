@@ -13,7 +13,7 @@ import { initTheme } from './ui/theme.js';
 import { initRouter } from './ui/router.js';
 import { openModal } from './ui/modal.js';
 import { restoreSession, open2FASetup } from './services/auth.js';
-import { loadTableData } from './services/public.js';
+import { loadTableData } from './services/admin.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     // Initialize Visual Theme and Navigation Routing
