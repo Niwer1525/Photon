@@ -2,6 +2,7 @@ package niwer.photon.objects;
 
 import java.util.Date;
 
+import niwer.photon.util.GsonUtils;
 import niwer.queryon.SQLSerializable;
 import niwer.queryon.tables.api.IColumnField;
 
@@ -43,5 +44,13 @@ public class ObjectServer extends SQLSerializable<ObjectServer> {
     @Override
     public int hashCode() {
         return (serverIP != null ? serverIP.hashCode() : 0) * 31 + serverPort;
+    }
+
+    public static ObjectServer fromPayload(String payload) {
+        try {
+            return GsonUtils.GSON.fromJson(payload, ObjectServer.class);
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

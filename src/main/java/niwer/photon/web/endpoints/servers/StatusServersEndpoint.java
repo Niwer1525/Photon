@@ -19,6 +19,11 @@ public class StatusServersEndpoint implements IEndpoint {
     @Override
     public void handle(Context handler) {
         IEndpoint.setupRateLimit(handler, 5, TimeUnit.SECONDS);
-        handler.json(ServerTable.getAllServers());
+
+        try {
+            handler.json(ServerTable.getAllServers());
+        } catch (Exception e) {
+            IEndpoint.handleException(StatusServersEndpoint.class, handler, e);
+        }
     }
 }

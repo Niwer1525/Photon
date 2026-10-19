@@ -18,8 +18,12 @@ public class InfoEndpoint implements IEndpoint {
     public void handle(Context handler) {
         IEndpoint.setupRateLimit(handler, 5, TimeUnit.MINUTES);
         
-        final NetworkConfig CONFIG = Directories.getConfig();
-        handler.json(new Config(CONFIG));
+        try {
+            final NetworkConfig CONFIG = Directories.getConfig();
+            handler.json(new Config(CONFIG));
+        } catch (Exception e) {
+            IEndpoint.handleException(InfoEndpoint.class, handler, e);
+        }
     }
 
     private record Config(

@@ -14,6 +14,7 @@ import org.simplejavamail.recipient.RecipientBuilder;
 
 import jakarta.mail.Message.RecipientType;
 import niwer.photon.Directories;
+import niwer.photon.util.TranslationManager.Language;
 
 /**
  * This class is responsible for managing email sending functionality. It provides methods to send emails, configure email settings, and handle email-related tasks.
@@ -38,7 +39,27 @@ public class MailManager {
             Directories.getConfig().mail_username,
             Directories.getConfig().mail_password)
         .withTransportStrategy(TransportStrategy.SMTP_TLS)
+        .async()
         .buildMailer();
+    }
+
+    public static void sendContactMessage(String senderName, Language lang, String visitorEmail, String message) {
+        if(!Directories.getConfig().hasEmailConfig()) throw new IllegalStateException("Mail configuration is not set.");
+        if (visitorEmail == null || visitorEmail.isBlank()) throw new IllegalArgumentException("Visitor email cannot be null or blank.");
+        if (message == null || message.isBlank()) throw new IllegalArgumentException("Message body cannot be null or blank.");
+
+        String displayName = (senderName != null && !senderName.isBlank()) ? senderName : "Anonymous";
+        String body = "Name : " + displayName + "\nEmail : " + visitorEmail + "\n\nMessage :\n" + message;
+
+        final Email email = EmailBuilder.startingBlank()
+            .from("Contact Form", Directories.getConfig().mail_sender_email)
+            // .to("Admin", Directories.getConfig().mail_sender_email)
+            .withReplyTo(displayName, visitorEmail)
+            .withSubject("New message from : " + displayName + " via Contact Form")
+            .withPlainText(body)
+            .buildEmail();
+
+        MailManager.getMailer().sendMail(email);
     }
 
     /**

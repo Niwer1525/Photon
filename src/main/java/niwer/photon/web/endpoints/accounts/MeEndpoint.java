@@ -17,9 +17,13 @@ public class MeEndpoint implements IEndpoint {
     public void handle(Context handler) {
         IEndpoint.setupRateLimit(handler, 10, TimeUnit.MINUTES);
 
-        final var ACCOUNT = SessionManager.requireAccount(handler);
-        if (ACCOUNT == null) return;
-
-        handler.json(ACCOUNT.payload());
+        try {
+            final var ACCOUNT = SessionManager.requireAccount(handler);
+            if (ACCOUNT == null) return;
+    
+            handler.json(ACCOUNT.payload());
+        } catch (Exception e) {
+            IEndpoint.handleException(MeEndpoint.class, handler, e);
+        }
     }
 }

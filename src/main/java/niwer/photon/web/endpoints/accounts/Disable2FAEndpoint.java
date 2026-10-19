@@ -21,30 +21,35 @@ public class Disable2FAEndpoint implements IEndpoint {
     public void handle(Context handler) {
         IEndpoint.setupRateLimit(handler, 5, TimeUnit.MINUTES);
 
-        final ObjectUserAccount account = SessionManager.requireAccount(handler);
-        if (account == null) return;
-
-        ObjectUserAccount freshAccount = PlayerAccountTable.getAccountByUUID(account.getUuid());
-        if (freshAccount == null || !freshAccount.isTotpEnabled()) {
-            handler.status(400).result("2FA is not enabled");
-            return;
+        try {
+            final ObjectUserAccount ACCOUNT = SessionManager.requireAccount(handler);
+            if (ACCOUNT == null) return;
+            
+            /* Fetch the most up-to-date account information */
+            final ObjectUserAccount FRESH_ACCOUNT = PlayerAccountTable.getAccountByUUID(ACCOUNT.getUuid());
+            if (FRESH_ACCOUNT == null || !FRESH_ACCOUNT.isTotpEnabled()) {
+                handler.status(400).result("2FA is not enabled");
+                return;
+            }
+            
+            /* Verify the provided verification code */
+            final String CODE = EndpointUtils.getString(handler, EndpointUtils.parseBody(handler.body()), "code");
+            if (CODE == null || CODE.isBlank()) {
+                handler.status(400).result("Verification code is required to disable 2FA");
+                return;
+            }
+            if (!TotpManager.verifyCode(FRESH_ACCOUNT.getTotpSecret(), CODE)) {
+                handler.status(401).result("Invalid verification code");
+                return;
+            }
+    
+            /* Disable 2FA and remove secret */
+            PlayerAccountTable.setTotpEnabled(FRESH_ACCOUNT.getUuid(), false);
+            PlayerAccountTable.setTotpSecret(FRESH_ACCOUNT.getUuid(), null);
+    
+            handler.status(200).result("2FA disabled successfully");
+        } catch (Exception e) {
+            IEndpoint.handleException(Disable2FAEndpoint.class, handler, e);
         }
-
-        String code = EndpointUtils.getString(handler, EndpointUtils.parseBody(handler.body()), "code");
-        if (code == null || code.isBlank()) {
-            handler.status(400).result("Verification code is required to disable 2FA");
-            return;
-        }
-
-        if (!TotpManager.verifyCode(freshAccount.getTotpSecret(), code)) {
-            handler.status(401).result("Invalid verification code");
-            return;
-        }
-
-        // Disable 2FA and remove secret[cite: 2]
-        PlayerAccountTable.setTotpEnabled(freshAccount.getUuid(), false);
-        PlayerAccountTable.setTotpSecret(freshAccount.getUuid(), null);
-
-        handler.status(200).result("2FA disabled successfully");
     }
 }

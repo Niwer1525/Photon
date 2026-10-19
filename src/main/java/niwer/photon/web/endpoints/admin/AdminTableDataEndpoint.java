@@ -26,42 +26,46 @@ public class AdminTableDataEndpoint implements IEndpoint {
     public void handle(Context handler) {
         IEndpoint.setupRateLimit(handler, 5, TimeUnit.MINUTES);
 
-        if (SessionManager.requireAdministrator(handler) == null) return;
-
-        final String TABLE_NAME = handler.pathParam("table");
-        final AdminTablesEndpoint.TableInfo TABLE_INFO = AdminTablesEndpoint.getTables().stream()
-            .filter(info -> info.table().equalsIgnoreCase(TABLE_NAME))
-            .findFirst()
-            .orElse(null);
-
-        if (TABLE_INFO == null) {
-            handler.status(404).result("Unknown table");
-            return;
-        }
-
-        final int LIMIT = clampLimit(handler.queryParam("limit"));
-        final List<String> COLUMNS = new ArrayList<>();
-        final List<Map<String, Object>> ROWS = new ArrayList<>();
-
         try {
-            PhotonEngine.DATA_BASE.connect();
-            try (Statement STATEMENT = PhotonEngine.DATA_BASE.sqlConnection().createStatement(); ResultSet RESULT = STATEMENT.executeQuery("SELECT * FROM \"" + TABLE_INFO.table() + "\" LIMIT " + LIMIT)) {
-
-                final ResultSetMetaData METADATA = RESULT.getMetaData();
-                for (int column = 1; column <= METADATA.getColumnCount(); column++) COLUMNS.add(METADATA.getColumnName(column));
-
-                while (RESULT.next()) {
-                    final Map<String, Object> ROW = new LinkedHashMap<>();
-                    for (int column = 1; column <= METADATA.getColumnCount(); column++) ROW.put(METADATA.getColumnName(column), normalizeValue(RESULT.getObject(column)));
-                    ROWS.add(ROW);
-                }
+            if (SessionManager.requireAdministrator(handler) == null) return;
+    
+            final String TABLE_NAME = handler.pathParam("table");
+            final AdminTablesEndpoint.TableInfo TABLE_INFO = AdminTablesEndpoint.getTables().stream()
+                .filter(info -> info.table().equalsIgnoreCase(TABLE_NAME))
+                .findFirst()
+                .orElse(null);
+    
+            if (TABLE_INFO == null) {
+                handler.status(404).result("Unknown table");
+                return;
             }
+    
+            final int LIMIT = clampLimit(handler.queryParam("limit"));
+            final List<String> COLUMNS = new ArrayList<>();
+            final List<Map<String, Object>> ROWS = new ArrayList<>();
+    
+            try {
+                PhotonEngine.DATA_BASE.connect();
+                try (Statement STATEMENT = PhotonEngine.DATA_BASE.sqlConnection().createStatement(); ResultSet RESULT = STATEMENT.executeQuery("SELECT * FROM \"" + TABLE_INFO.table() + "\" LIMIT " + LIMIT)) {
+    
+                    final ResultSetMetaData METADATA = RESULT.getMetaData();
+                    for (int column = 1; column <= METADATA.getColumnCount(); column++) COLUMNS.add(METADATA.getColumnName(column));
+    
+                    while (RESULT.next()) {
+                        final Map<String, Object> ROW = new LinkedHashMap<>();
+                        for (int column = 1; column <= METADATA.getColumnCount(); column++) ROW.put(METADATA.getColumnName(column), normalizeValue(RESULT.getObject(column)));
+                        ROWS.add(ROW);
+                    }
+                }
+            } catch (Exception e) {
+                handler.status(500).result("Failed to load table: " + e.getMessage());
+                return;
+            }
+    
+            handler.json(new TableData(TABLE_INFO.table(), TABLE_INFO.label(), COLUMNS, ROWS));
         } catch (Exception e) {
-            handler.status(500).result("Failed to load table: " + e.getMessage());
-            return;
+            IEndpoint.handleException(AdminTableDataEndpoint.class, handler, e);
         }
-
-        handler.json(new TableData(TABLE_INFO.table(), TABLE_INFO.label(), COLUMNS, ROWS));
     }
 
     private static int clampLimit(String limitValue) {

@@ -18,9 +18,13 @@ public class AccountEntitlementsEndpoint implements IEndpoint {
     public void handle(Context handler) {
         IEndpoint.setupRateLimit(handler, 10, TimeUnit.MINUTES);
 
-        final var account = SessionManager.requireAccount(handler);
-        if (account == null) return;
-
-        handler.json(EntitlementManager.getEntitlements(account.getUuid()));
+        try {
+            final var account = SessionManager.requireAccount(handler);
+            if (account == null) return;
+    
+            handler.json(EntitlementManager.getEntitlements(account.getUuid()));
+        } catch (Exception e) {
+            IEndpoint.handleException(AccountEntitlementsEndpoint.class, handler, e);
+        }
     }
 }

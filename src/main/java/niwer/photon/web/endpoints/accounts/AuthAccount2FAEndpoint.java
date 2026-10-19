@@ -19,30 +19,34 @@ public class AuthAccount2FAEndpoint implements IEndpoint {
     public void handle(Context handler) {
         IEndpoint.setupRateLimit(handler, 5, TimeUnit.MINUTES);
 
-        final var body = EndpointUtils.parseBody(handler.body());
-        final String ticket = EndpointUtils.getString(handler, body, "ticket");
-        final String code = EndpointUtils.getString(handler, body, "code");
-
-        if (ticket == null || ticket.isBlank() || code == null || code.isBlank()) {
-            handler.status(400).result("Missing ticket or 2FA code");
-            return;
+        try {
+            final var body = EndpointUtils.parseBody(handler.body());
+            final String ticket = EndpointUtils.getString(handler, body, "ticket");
+            final String code = EndpointUtils.getString(handler, body, "code");
+    
+            if (ticket == null || ticket.isBlank() || code == null || code.isBlank()) {
+                handler.status(400).result("Missing ticket or 2FA code");
+                return;
+            }
+    
+            // Validate ticket and 6-digit TOTP code
+            final Session session = SessionManager.complete2FA(ticket, code);
+            if (session == null) {
+                handler.status(401).result("Invalid 2FA code or expired attempt");
+                return;
+            }
+    
+            final boolean isAdmin = session.account().isAdministrator();
+    
+            if (isAdmin) {
+                AuthAccountEndpoint.setupAdminCookies(handler, session);
+                handler.json(new AuthAccountEndpoint.LoginResponse(null, session.refreshToken(), session.account().payload(), true));
+                return;
+            }
+    
+            handler.json(new AuthAccountEndpoint.LoginResponse(session.token(), session.refreshToken(), session.account().payload(), false));
+        } catch (Exception e) {
+            IEndpoint.handleException(AuthAccount2FAEndpoint.class, handler, e);
         }
-
-        // Validate ticket and 6-digit TOTP code
-        final Session session = SessionManager.complete2FA(ticket, code);
-        if (session == null) {
-            handler.status(401).result("Invalid 2FA code or expired attempt");
-            return;
-        }
-
-        final boolean isAdmin = session.account().isAdministrator();
-
-        if (isAdmin) {
-            AuthAccountEndpoint.setupAdminCookies(handler, session);
-            handler.json(new AuthAccountEndpoint.LoginResponse(null, session.refreshToken(), session.account().payload(), true));
-            return;
-        }
-
-        handler.json(new AuthAccountEndpoint.LoginResponse(session.token(), session.refreshToken(), session.account().payload(), false));
     }
 }

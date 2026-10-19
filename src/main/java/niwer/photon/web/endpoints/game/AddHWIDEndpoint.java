@@ -20,23 +20,28 @@ public class AddHWIDEndpoint implements IEndpoint {
     public void handle(Context handler) {
         IEndpoint.setupRateLimit(handler, 10, TimeUnit.MINUTES);
 
-        final String HWID = handler.formParam("hwid");
-        final String USER_UUID = handler.formParam("userUUID");
-        final String OPERATRING_SYSTEM = handler.formParam("operatingSystem");
-
-        /* Ensure all parameters are provided */
-        if (HWID == null || USER_UUID == null || OPERATRING_SYSTEM == null) {
-            handler.status(400).result("Missing parameters");
-            return;
+        try {
+            final String HWID = handler.formParam("hwid");
+            final String USER_UUID = handler.formParam("userUUID");
+            final String OPERATRING_SYSTEM = handler.formParam("operatingSystem");
+    
+            /* Ensure all parameters are provided */
+            if (HWID == null || USER_UUID == null || OPERATRING_SYSTEM == null) {
+                handler.status(400).result("Missing parameters");
+                return;
+            }
+    
+            /* Ensure parameters are not blank */
+            if (HWID.isBlank() || USER_UUID.isBlank() || OPERATRING_SYSTEM.isBlank()) {
+                handler.status(400).result("Parameters cannot be blank");
+                return;
+            }
+    
+            HWIDTable.save(USER_UUID, HWID, OPERATRING_SYSTEM);
+            Console.log("Saving new HWID entry for user: " + USER_UUID).sendToProcessor().type(PhotonLogTypes.NETWORK).container(PhotonEngine.LOGGER).send();
+            handler.status(200).result("HWID entry saved successfully");
+        } catch (Exception e) {
+            IEndpoint.handleException(AddHWIDEndpoint.class, handler, e);
         }
-
-        /* Ensure parameters are not blank */
-        if (HWID.isBlank() || USER_UUID.isBlank() || OPERATRING_SYSTEM.isBlank()) {
-            handler.status(400).result("Parameters cannot be blank");
-            return;
-        }
-
-        HWIDTable.save(USER_UUID, HWID, OPERATRING_SYSTEM);
-        Console.log("Saving new HWID entry for user: " + USER_UUID).sendToProcessor().type(PhotonLogTypes.NETWORK).container(PhotonEngine.LOGGER).send();
     }
 }

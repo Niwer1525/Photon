@@ -27,20 +27,24 @@ public class Confirm2FAEndpoint implements IEndpoint {
     public void handle(Context ctx) {
         IEndpoint.setupRateLimit(ctx, 5, TimeUnit.MINUTES);
 
-        final ObjectUserAccount account = SessionManager.requireAccount(ctx);
-        if (account == null) return;
-
-        String code = EndpointUtils.getString(ctx, EndpointUtils.parseBody(ctx.body()), "code");
-        if (code == null || code.isBlank()) {
-            ctx.status(400).result("Missing 2FA code");
-            return;
+        try {
+            final ObjectUserAccount ACCOUNT = SessionManager.requireAccount(ctx);
+            if (ACCOUNT == null) return;
+    
+            String code = EndpointUtils.getString(ctx, EndpointUtils.parseBody(ctx.body()), "code");
+            if (code == null || code.isBlank()) {
+                ctx.status(400).result("Missing 2FA code");
+                return;
+            }
+    
+            final ObjectUserAccount freshAccount = PlayerAccountTable.getAccountByUUID(ACCOUNT.getUuid()); // Fetch fresh copy of the account with the TOTP secret
+    
+            if (freshAccount != null && TotpManager.verifyCode(freshAccount.getTotpSecret(), code)) {
+                PlayerAccountTable.setTotpEnabled(freshAccount.getUuid(), true);
+                ctx.status(200).result("2FA enabled successfully");
+            } else ctx.status(400).result("Invalid 2FA code");
+        } catch (Exception e) {
+            IEndpoint.handleException(Confirm2FAEndpoint.class, ctx, e);
         }
-
-        ObjectUserAccount freshAccount = PlayerAccountTable.getAccountByUUID(account.getUuid()); // Fetch fresh copy of the account with the TOTP secret
-
-        if (freshAccount != null && TotpManager.verifyCode(freshAccount.getTotpSecret(), code)) {
-            PlayerAccountTable.setTotpEnabled(freshAccount.getUuid(), true);
-            ctx.status(200).result("2FA enabled successfully");
-        } else ctx.status(400).result("Invalid 2FA code");
     }
 }

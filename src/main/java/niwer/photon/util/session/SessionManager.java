@@ -113,16 +113,21 @@ public final class SessionManager {
     }
 
     private static ObjectUserAccount accountFromRequest(Context handler, SessionScope scope) {
+        return accountFromRequest(handler, scope, true);
+    }
+
+    private static ObjectUserAccount accountFromRequest(Context handler, SessionScope scope, boolean allowFallback) {
         String token = scope.extractToken(handler);
         SessionSnapshot session = (token != null) ? scope.sessions.get(token) : null;
 
         if (session == null) {
+            if (!allowFallback) return null;
             if(scope == SessionScope.USER) { // If user session is not found, check if an admin session exists and the account has admin privileges
-                ObjectUserAccount adminAccount = accountFromRequest(handler, SessionScope.ADMIN);
+                ObjectUserAccount adminAccount = accountFromRequest(handler, SessionScope.ADMIN, false);
                 return (adminAccount != null && adminAccount.isAdministrator()) ? adminAccount : null;
             }
             if (scope == SessionScope.ADMIN) { // Admins can fall back to regular user session if the account has admin privileges
-                ObjectUserAccount userAccount = accountFromRequest(handler, SessionScope.USER);
+                ObjectUserAccount userAccount = accountFromRequest(handler, SessionScope.USER, false);
                 return (userAccount != null && userAccount.isAdministrator()) ? userAccount : null;
             }
             return null;

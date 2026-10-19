@@ -21,20 +21,24 @@ public class AccountLicenseProductsEndpoint implements IEndpoint {
     public void handle(Context handler) {
         IEndpoint.setupRateLimit(handler, 10, TimeUnit.SECONDS);
         
-        final var ACCOUNT = SessionManager.requireAccount(handler);
-        if (ACCOUNT == null) return;
-        
-        /* Check if the user has any access to the license system */
-        if (!ACCOUNT.isAdministrator() && !EntitlementManager.hasAnyAccess(ACCOUNT.getUuid())) {
-            handler.status(403).result("Purchase or active subscription required");
-            return;
+        try {
+            final var ACCOUNT = SessionManager.requireAccount(handler);
+            if (ACCOUNT == null) return;
+            
+            /* Check if the user has any access to the license system */
+            if (!ACCOUNT.isAdministrator() && !EntitlementManager.hasAnyAccess(ACCOUNT.getUuid())) {
+                handler.status(403).result("Purchase or active subscription required");
+                return;
+            }
+            
+            /* Get the products to which the user has access */
+            final List<Map<String, Object>> PRODUCTS = Directories.getConfig().getProducts().stream()
+                .filter(product -> product.isLicenseRequired() && (ACCOUNT.isAdministrator() || EntitlementManager.hasAccess(ACCOUNT.getUuid(), product.id())))
+                .map(product -> product.payload())
+                .toList();
+            handler.json(PRODUCTS);
+        } catch (Exception e) {
+            IEndpoint.handleException(AccountLicenseProductsEndpoint.class, handler, e);
         }
-        
-        /* Get the products to which the user has access */
-        final List<Map<String, Object>> PRODUCTS = Directories.getConfig().getProducts().stream()
-            .filter(product -> product.isLicenseRequired() && (ACCOUNT.isAdministrator() || EntitlementManager.hasAccess(ACCOUNT.getUuid(), product.id())))
-            .map(product -> product.payload())
-            .toList();
-        handler.json(PRODUCTS);
     }
 }

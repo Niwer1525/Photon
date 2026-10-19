@@ -1,5 +1,7 @@
 package niwer.photon.web.endpoints.accounts;
 
+import java.util.concurrent.TimeUnit;
+
 import io.javalin.http.Context;
 import niwer.photon.util.session.Session;
 import niwer.photon.util.session.SessionManager;
@@ -15,19 +17,23 @@ public class RefreshSessionEndpoint implements IEndpoint {
 
     @Override
     public void handle(Context handler) {
-        final var body = EndpointUtils.parseBody(handler.body());
-        final String refreshToken = EndpointUtils.getString(handler, body, "refreshToken");
-        final Session session = SessionManager.refreshSession(refreshToken);
-        if (session == null) {
-            handler.status(401).result("Invalid or expired refresh token");
-            return;
-        }
+        IEndpoint.setupRateLimit(handler, 15, TimeUnit.MINUTES);
 
-        if (session.account().isAdministrator()) {
-            AuthAccountEndpoint.setupAdminCookies(handler, session);
-            handler.json(new AuthAccountEndpoint.LoginResponse(null, session.refreshToken(), session.account().payload(), true));
-        } else {
-            handler.json(new AuthAccountEndpoint.LoginResponse(session.token(), session.refreshToken(), session.account().payload(), false));
+        try {
+            final var body = EndpointUtils.parseBody(handler.body());
+            final String refreshToken = EndpointUtils.getString(handler, body, "refreshToken");
+            final Session session = SessionManager.refreshSession(refreshToken);
+            if (session == null) {
+                handler.status(401).result("Invalid or expired refresh token");
+                return;
+            }
+    
+            if (session.account().isAdministrator()) {
+                AuthAccountEndpoint.setupAdminCookies(handler, session);
+                handler.json(new AuthAccountEndpoint.LoginResponse(null, session.refreshToken(), session.account().payload(), true));
+            } else handler.json(new AuthAccountEndpoint.LoginResponse(session.token(), session.refreshToken(), session.account().payload(), false));
+        } catch (Exception e) {
+            IEndpoint.handleException(RefreshSessionEndpoint.class, handler, e);
         }
     }
 }

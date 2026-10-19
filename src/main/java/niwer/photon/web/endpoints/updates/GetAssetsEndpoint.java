@@ -46,24 +46,28 @@ public class GetAssetsEndpoint implements IEndpoint {
     public void handle(Context ctx) {
         IEndpoint.setupRateLimit(ctx, 10, TimeUnit.MINUTES);
 
-        /* Return cached response if still valid */
-        final long NOW = System.currentTimeMillis();
-        if (cachedData != null && (NOW - lastCacheUpdate) < CACHE_TTL_MILLIS) {
-            ctx.json(cachedData);
-            return;
-        }
-
-        /* Asynchronously refresh data if stale or null */
-        ctx.future(() -> getOrRefreshDataAsync().thenAccept(ctx::json).exceptionally(e -> {
-            e.printStackTrace();
-            /* Fallback to stale cache if GitHub rate limits fail */
-            if (cachedData != null) {
+        try {
+            /* Return cached response if still valid */
+            final long NOW = System.currentTimeMillis();
+            if (cachedData != null && (NOW - lastCacheUpdate) < CACHE_TTL_MILLIS) {
                 ctx.json(cachedData);
-                return null;
+                return;
             }
-            ctx.status(500).json(Map.of("error", e.getMessage() != null ? e.getMessage() : "Unknown error"));
-            return null;
-        }));
+    
+            /* Asynchronously refresh data if stale or null */
+            ctx.future(() -> getOrRefreshDataAsync().thenAccept(ctx::json).exceptionally(e -> {
+                e.printStackTrace();
+                /* Fallback to stale cache if GitHub rate limits fail */
+                if (cachedData != null) {
+                    ctx.json(cachedData);
+                    return null;
+                }
+                ctx.status(500).json(Map.of("error", e.getMessage() != null ? e.getMessage() : "Unknown error"));
+                return null;
+            }));
+        } catch (Exception e) {
+            IEndpoint.handleException(GetAssetsEndpoint.class, ctx, e);
+        }
     }
 
     private CompletableFuture<Map<String, ReleaseResult>> getOrRefreshDataAsync() {

@@ -37,45 +37,49 @@ public class AdminSqlEndpoint implements IEndpoint {
     public void handle(Context handler) {
         IEndpoint.setupRateLimit(handler, 5, TimeUnit.MINUTES);
         
-        if (SessionManager.requireAdministrator(handler) == null) return;
-        if (!SessionManager.validateCsrf(handler)) {
-            handler.status(403).result("Invalid CSRF token");
-            return;
-        }
-
-        /* Get the SQL code entered by the user */
-        String sql = GsonUtils.getString(EndpointUtils.readBody(handler), "sql", "sql", null);
-        if (sql == null) {
-            handler.status(400).result("SQL is required");
-            return;
-        }
-        sql = sql.trim();
-        
-        /* Ensure it's a valid SQL code, if not cancel. */
-        String error = validate(sql);
-        if (error != null) {
-            handler.status(400).result(error);
-            return;
-        }
-
-        boolean write = sql.regionMatches(true, 0, "UPDATE", 0, 6); // If it's an UPDATE statement, we will create a backup before executing it. SELECT statements are read-only and don't require a backup.
         try {
-            synchronized (PhotonEngine.DATA_BASE) {
-                PhotonEngine.DATA_BASE.connect();
-                if (write) PhotonEngine.backupManager().createBackup("admin-before-sql");
-                try (Statement STATEMENT = PhotonEngine.DATA_BASE.sqlConnection().createStatement()) {
-                    if (write) {
-                        int changed = STATEMENT.executeUpdate(sql);
-                        handler.json(Map.of("type", "update", "affectedRows", changed));
-                    } else {
-                        try (ResultSet result = STATEMENT.executeQuery(sql)) {
-                            handler.json(readRows(result));
+            if (SessionManager.requireAdministrator(handler) == null) return;
+            if (!SessionManager.validateCsrf(handler)) {
+                handler.status(403).result("Invalid CSRF token");
+                return;
+            }
+    
+            /* Get the SQL code entered by the user */
+            String sql = GsonUtils.getString(EndpointUtils.readBody(handler), "sql", "sql", null);
+            if (sql == null) {
+                handler.status(400).result("SQL is required");
+                return;
+            }
+            sql = sql.trim();
+            
+            /* Ensure it's a valid SQL code, if not cancel. */
+            String error = validate(sql);
+            if (error != null) {
+                handler.status(400).result(error);
+                return;
+            }
+    
+            boolean write = sql.regionMatches(true, 0, "UPDATE", 0, 6); // If it's an UPDATE statement, we will create a backup before executing it. SELECT statements are read-only and don't require a backup.
+            try {
+                synchronized (PhotonEngine.DATA_BASE) {
+                    PhotonEngine.DATA_BASE.connect();
+                    if (write) PhotonEngine.backupManager().createBackup("admin-before-sql");
+                    try (Statement STATEMENT = PhotonEngine.DATA_BASE.sqlConnection().createStatement()) {
+                        if (write) {
+                            int changed = STATEMENT.executeUpdate(sql);
+                            handler.json(Map.of("type", "update", "affectedRows", changed));
+                        } else {
+                            try (ResultSet result = STATEMENT.executeQuery(sql)) {
+                                handler.json(readRows(result));
+                            }
                         }
                     }
                 }
+            } catch (Exception exception) {
+                handler.status(400).result("SQL rejected: " + exception.getMessage());
             }
-        } catch (Exception exception) {
-            handler.status(400).result("SQL rejected: " + exception.getMessage());
+        } catch (Exception e) {
+            IEndpoint.handleException(AdminSqlEndpoint.class, handler, e);
         }
     }
 

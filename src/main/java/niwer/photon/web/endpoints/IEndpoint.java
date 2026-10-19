@@ -5,6 +5,9 @@ import java.util.concurrent.TimeUnit;
 import io.javalin.config.JavalinConfig;
 import io.javalin.http.Context;
 import io.javalin.plugin.bundled.RateLimitPlugin;
+import niwer.lumen.Console;
+import niwer.photon.PhotonEngine;
+import niwer.photon.util.PhotonLogTypes;
 import niwer.photon.web.HttpMethod;
 
 /**
@@ -66,5 +69,17 @@ public interface IEndpoint {
         } catch (Exception e) {
             throw new RuntimeException("Failed to instantiate endpoint: " + endpointClass.getName(), e);
         }
+    }
+
+    /**
+     * Handles exceptions that occur during the processing of an endpoint. Logs the error and sends a 500 Internal Server Error response to the client.
+     * 
+     * @param endpointClass The class of the endpoint where the exception occurred
+     * @param handler The Javalin Context object representing the incoming request and response
+     * @param e The exception that occurred during endpoint processing
+     */
+    public static void handleException(Class<? extends IEndpoint> endpointClass, Context handler, Exception e) {
+        Console.log("Error in " + endpointClass.getSimpleName(), e).error().type(PhotonLogTypes.WEB_SERVER).container(PhotonEngine.LOGGER).send();
+        handler.status(500).result("Internal server error: " + e.getMessage());
     }
 }

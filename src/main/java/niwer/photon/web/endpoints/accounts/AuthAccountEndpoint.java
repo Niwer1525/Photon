@@ -33,29 +33,29 @@ public class AuthAccountEndpoint implements IEndpoint {
         }
 
         /* Fetch user and verify password */
-        final ObjectUserAccount account = PlayerAccountTable.getAccountByEmail(CREDENTIALS.email);
-        if (account == null || account.password() == null || !HashUtils.passwordMatches(account.password(), CREDENTIALS.password)) {
+        final ObjectUserAccount ACCOUNT = PlayerAccountTable.getAccountByEmail(CREDENTIALS.email);
+        if (ACCOUNT == null || ACCOUNT.password() == null || !HashUtils.passwordMatches(ACCOUNT.password(), CREDENTIALS.password)) {
             handler.status(401).result("Invalid credentials or access denied");
             return;
         }
 
         /* Prevent login if account is pending deletion */
-        if (PlayerAccountTable.isPendingDeletion(account.getUuid())) {
+        if (PlayerAccountTable.isPendingDeletion(ACCOUNT.getUuid())) {
             handler.status(403).result("This account has been scheduled for deletion and cannot be accessed.");
             return;
         }
 
-        final boolean isAdmin = account.isAdministrator();
+        final boolean IS_ADMIN = ACCOUNT.isAdministrator();
 
         /* Enforce 2FA If enabled (or if user is admin), stop here and return challenge ticket */
-        if (account.isTotpEnabled() /* || isAdmin */) { //TODO: Maybe useful in the future to force admins to have 2FA enabled, but for now we allow it
+        if (ACCOUNT.isTotpEnabled() /* || isAdmin */) { //TODO: Maybe useful in the future to force admins to have 2FA enabled, but for now we allow it
             // if (isAdmin && !account.isTotpEnabled()) {
             //     handler.status(403).result("Administrator accounts must configure 2FA."); //TODO: Maybe useful in the future to force admins to have 2FA enabled, but for now we allow it
             //     return;
             // }
 
-            SessionScope scope = isAdmin ? SessionScope.ADMIN : SessionScope.USER;
-            String ticket = SessionManager.createPending2FA(account.getUuid(), scope, CREDENTIALS.token);
+            SessionScope scope = IS_ADMIN ? SessionScope.ADMIN : SessionScope.USER;
+            String ticket = SessionManager.createPending2FA(ACCOUNT.getUuid(), scope, CREDENTIALS.token);
 
             // Tell the frontend to switch to the 6-digit TOTP input
             handler.json(Map.of(
@@ -67,23 +67,23 @@ public class AuthAccountEndpoint implements IEndpoint {
 
         /* Normal login (only reached if 2FA is not enabled) */
         if (CREDENTIALS.token != null && !CREDENTIALS.token.isBlank()) {
-            if (!EntitlementManager.redeemPurchase(CREDENTIALS.token, account)) {
+            if (!EntitlementManager.redeemPurchase(CREDENTIALS.token, ACCOUNT)) {
                 handler.status(403).result("Invalid or expired purchase token");
                 return;
             }
         }
 
-        final Session AUTH = SessionManager.createSession(account, isAdmin ? SessionScope.ADMIN : SessionScope.USER);
+        final Session AUTH = SessionManager.createSession(ACCOUNT, IS_ADMIN ? SessionScope.ADMIN : SessionScope.USER);
         if (AUTH == null) {
             handler.status(401).result("Failed to create session");
             return;
         }
 
-        if (isAdmin) {
+        if (IS_ADMIN) {
             setupAdminCookies(handler, AUTH);
-            handler.json(new LoginResponse(null, AUTH.refreshToken(), account.payload(), true));
+            handler.json(new LoginResponse(null, AUTH.refreshToken(), ACCOUNT.payload(), true));
         } else {
-            handler.json(new LoginResponse(AUTH.token(), AUTH.refreshToken(), account.payload(), false));
+            handler.json(new LoginResponse(AUTH.token(), AUTH.refreshToken(), ACCOUNT.payload(), false));
         }
     }
 

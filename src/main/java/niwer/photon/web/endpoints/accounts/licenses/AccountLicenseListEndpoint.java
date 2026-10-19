@@ -21,17 +21,21 @@ public class AccountLicenseListEndpoint implements IEndpoint {
     @Override
     public void handle(Context handler) {
         IEndpoint.setupRateLimit(handler, 10, TimeUnit.SECONDS);
-
-        final var ACCOUNT = SessionManager.requireAccount(handler);
-        if (ACCOUNT == null) return;
         
-        /* Check if the user has any access to the license system */
-        if (!ACCOUNT.isAdministrator() && !EntitlementManager.hasAnyAccess(ACCOUNT.getUuid())) {
-            handler.status(403).result("Purchase or active subscription required");
-            return;
+        try {
+            final var ACCOUNT = SessionManager.requireAccount(handler);
+            if (ACCOUNT == null) return;
+    
+            /* Check if the user has any access to the license system */
+            if (!ACCOUNT.isAdministrator() && !EntitlementManager.hasAnyAccess(ACCOUNT.getUuid())) {
+                handler.status(403).result("Purchase or active subscription required");
+                return;
+            }
+    
+            final List<ObjectLicense> LICENSES = LicenseTable.getByCreatorUuid(ACCOUNT.getUuid());
+            handler.json(LICENSES.stream().map(license -> Objects.requireNonNull(license).payload()).toList());
+        } catch (Exception e) {
+            IEndpoint.handleException(AccountLicenseListEndpoint.class, handler, e);
         }
-
-        final List<ObjectLicense> LICENSES = LicenseTable.getByCreatorUuid(ACCOUNT.getUuid());
-        handler.json(LICENSES.stream().map(license -> Objects.requireNonNull(license).payload()).toList());
     }
 }

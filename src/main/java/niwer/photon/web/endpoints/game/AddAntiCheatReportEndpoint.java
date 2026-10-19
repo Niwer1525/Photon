@@ -20,24 +20,29 @@ public class AddAntiCheatReportEndpoint implements IEndpoint {
     public void handle(Context handler) {
         IEndpoint.setupRateLimit(handler, 10, TimeUnit.MINUTES);
         
-        final String FILE_MESSAGE = handler.formParam("fileMessage");
-        final String USER_UUID = handler.formParam("userUUID");
-        final String OPERATRING_SYSTEM = handler.formParam("operatingSystem");
-        final String TIME_STAMP = handler.formParam("timestamp");
-
-        /* Ensure all parameters are provided */
-        if (FILE_MESSAGE == null || TIME_STAMP == null || USER_UUID == null || OPERATRING_SYSTEM == null) {
-            handler.status(400).result("Missing parameters");
-            return;
+        try {
+            final String FILE_MESSAGE = handler.formParam("fileMessage");
+            final String USER_UUID = handler.formParam("userUUID");
+            final String OPERATRING_SYSTEM = handler.formParam("operatingSystem");
+            final String TIME_STAMP = handler.formParam("timestamp");
+    
+            /* Ensure all parameters are provided */
+            if (FILE_MESSAGE == null || TIME_STAMP == null || USER_UUID == null || OPERATRING_SYSTEM == null) {
+                handler.status(400).result("Missing parameters");
+                return;
+            }
+    
+            /* Ensure parameters are not blank */
+            if (FILE_MESSAGE.isBlank() || TIME_STAMP.isBlank() || USER_UUID.isBlank() || OPERATRING_SYSTEM.isBlank()) {
+                handler.status(400).result("Parameters cannot be blank");
+                return;
+            }
+    
+            AnticheatTable.save(USER_UUID, TIME_STAMP, FILE_MESSAGE, OPERATRING_SYSTEM);
+            Console.log("Anticheat report received: " + USER_UUID).sendToProcessor().type(PhotonLogTypes.NETWORK).container(PhotonEngine.LOGGER).send();
+            handler.status(200).result("Anticheat report received successfully");
+        } catch (Exception e) {
+            IEndpoint.handleException(AddAntiCheatReportEndpoint.class, handler, e);
         }
-
-        /* Ensure parameters are not blank */
-        if (FILE_MESSAGE.isBlank() || TIME_STAMP.isBlank() || USER_UUID.isBlank() || OPERATRING_SYSTEM.isBlank()) {
-            handler.status(400).result("Parameters cannot be blank");
-            return;
-        }
-
-        AnticheatTable.save(USER_UUID, TIME_STAMP, FILE_MESSAGE, OPERATRING_SYSTEM);
-        Console.log("Anticheat report received: " + USER_UUID).sendToProcessor().type(PhotonLogTypes.NETWORK).container(PhotonEngine.LOGGER).send();
     }
 }

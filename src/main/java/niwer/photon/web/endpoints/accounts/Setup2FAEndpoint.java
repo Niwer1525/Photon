@@ -27,28 +27,32 @@ public class Setup2FAEndpoint implements IEndpoint {
     public void handle(Context handler) {
         IEndpoint.setupRateLimit(handler, 10, TimeUnit.MINUTES);
 
-        final ObjectUserAccount account = SessionManager.requireAccount(handler);
-        if (account == null) return;
-
-        /* Check if 2FA is already enabled */
-        if(account.isTotpEnabled() /* || (account.getTotpSecret() != null && !account.getTotpSecret().isBlank()) */) {
-            handler.status(400).result("2FA is already enabled for this account");
-            return;
-        }
-
         try {
-            String rawSecret = TotpManager.generateRawSecret();
-            String encryptedSecret = TotpManager.encrypt(rawSecret);
-            String qrUri = TotpManager.generateQrDataUri(account.getEmail(), rawSecret);
-
-            PlayerAccountTable.setTotpSecret(account.getUuid(), encryptedSecret); // Save secret to database (totpEnabled remains false until verified)
-
-            handler.json(Map.of(
-                "qrCode", qrUri,
-                "manualKey", rawSecret
-            ));
+            final ObjectUserAccount account = SessionManager.requireAccount(handler);
+            if (account == null) return;
+    
+            /* Check if 2FA is already enabled */
+            if(account.isTotpEnabled() /* || (account.getTotpSecret() != null && !account.getTotpSecret().isBlank()) */) {
+                handler.status(400).result("2FA is already enabled for this account");
+                return;
+            }
+    
+            try {
+                String rawSecret = TotpManager.generateRawSecret();
+                String encryptedSecret = TotpManager.encrypt(rawSecret);
+                String qrUri = TotpManager.generateQrDataUri(account.getEmail(), rawSecret);
+    
+                PlayerAccountTable.setTotpSecret(account.getUuid(), encryptedSecret); // Save secret to database (totpEnabled remains false until verified)
+    
+                handler.json(Map.of(
+                    "qrCode", qrUri,
+                    "manualKey", rawSecret
+                ));
+            } catch (Exception e) {
+                handler.status(500).result("Failed to initiate 2FA setup");
+            }
         } catch (Exception e) {
-            handler.status(500).result("Failed to initiate 2FA setup");
+            IEndpoint.handleException(Setup2FAEndpoint.class, handler, e);
         }
     }
 }

@@ -28,8 +28,12 @@ public class AdminTablesEndpoint implements IEndpoint {
     public void handle(Context handler) {
         IEndpoint.setupRateLimit(handler, 5, TimeUnit.MINUTES);
 
-        if (SessionManager.requireAdministrator(handler) == null) return;
-        handler.json(TABLES);
+        try {
+            if (SessionManager.requireAdministrator(handler) == null) return;
+            handler.json(TABLES);
+        } catch (Exception e) {
+            IEndpoint.handleException(AdminTablesEndpoint.class, handler, e);
+        }
     }
 
     public static List<TableInfo> getTables() {
