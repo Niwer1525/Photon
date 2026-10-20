@@ -66,7 +66,7 @@ public class WebServerEngine {
                 }));
                 cfg.bundledPlugins.enableCors(cors -> {
                     cors.addRule(it -> {
-                        it.allowHost(Directories.getConfig().isDevEnvironment() ? "http://localhost:3000" : "https://niwer.dev");
+                        it.anyHost(); // Allow all hosts
                         it.allowCredentials = true; // Required to pass cookies, auth sessions, or credentials
                         it.exposeHeader("X-Photon-User-Token");
                     });
