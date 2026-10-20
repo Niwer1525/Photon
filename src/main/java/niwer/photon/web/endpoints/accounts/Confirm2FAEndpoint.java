@@ -1,10 +1,16 @@
 package niwer.photon.web.endpoints.accounts;
 
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import io.javalin.http.Context;
+import niwer.lumen.Console;
+import niwer.photon.PhotonEngine;
 import niwer.photon.objects.ObjectUserAccount;
 import niwer.photon.sql.PlayerAccountTable;
+import niwer.photon.sql.RecoveryCodesTable;
+import niwer.photon.util.PhotonLogTypes;
 import niwer.photon.util.TotpManager;
 import niwer.photon.util.session.SessionManager;
 import niwer.photon.web.HttpMethod;
@@ -37,11 +43,13 @@ public class Confirm2FAEndpoint implements IEndpoint {
                 return;
             }
     
-            final ObjectUserAccount freshAccount = PlayerAccountTable.getAccountByUUID(ACCOUNT.getUuid()); // Fetch fresh copy of the account with the TOTP secret
-    
-            if (freshAccount != null && TotpManager.verifyCode(freshAccount.getTotpSecret(), code)) {
-                PlayerAccountTable.setTotpEnabled(freshAccount.getUuid(), true);
-                ctx.status(200).result("2FA enabled successfully");
+            final ObjectUserAccount FRESH_ACCOUNT = PlayerAccountTable.getAccountByUUID(ACCOUNT.getUuid()); // Fetch fresh copy of the account with the TOTP secret
+            if (FRESH_ACCOUNT != null && TotpManager.verifyCode(FRESH_ACCOUNT.getTotpSecret(), code)) {
+                PlayerAccountTable.setTotpEnabled(FRESH_ACCOUNT.getUuid(), true);
+                final List<String> PLAIN_RECOVERY_CODES = RecoveryCodesTable.generateAndSaveCodes(FRESH_ACCOUNT.getUuid());
+
+                ctx.status(200).json(Map.of("recovery_codes", PLAIN_RECOVERY_CODES)); // Send the plaintext recovery codes to the user (they should be shown only once)
+                Console.log("2FA enabled for account %s (UUID: %s)", ACCOUNT.getUsername(), ACCOUNT.getUuid()).sendToProcessor().type(PhotonLogTypes.NETWORK).container(PhotonEngine.LOGGER).send();
             } else ctx.status(400).result("Invalid 2FA code");
         } catch (Exception e) {
             IEndpoint.handleException(Confirm2FAEndpoint.class, ctx, e);

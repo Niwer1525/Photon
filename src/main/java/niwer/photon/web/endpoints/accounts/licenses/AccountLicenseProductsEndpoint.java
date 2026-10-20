@@ -36,7 +36,7 @@ public class AccountLicenseProductsEndpoint implements IEndpoint {
                 .filter(product -> product.isLicenseRequired() && (ACCOUNT.isAdministrator() || EntitlementManager.hasAccess(ACCOUNT.getUuid(), product.id())))
                 .map(product -> product.payload())
                 .toList();
-            handler.json(PRODUCTS);
+            handler.status(200).json(PRODUCTS);
         } catch (Exception e) {
             IEndpoint.handleException(AccountLicenseProductsEndpoint.class, handler, e);
         }

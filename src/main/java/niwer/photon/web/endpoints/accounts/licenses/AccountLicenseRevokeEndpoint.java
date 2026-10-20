@@ -5,9 +5,12 @@ import java.util.concurrent.TimeUnit;
 import com.google.gson.JsonObject;
 
 import io.javalin.http.Context;
+import niwer.lumen.Console;
+import niwer.photon.PhotonEngine;
 import niwer.photon.objects.ObjectLicense;
 import niwer.photon.sql.LicenseTable;
 import niwer.photon.util.GsonUtils;
+import niwer.photon.util.PhotonLogTypes;
 import niwer.photon.util.session.SessionManager;
 import niwer.photon.util.stripe.EntitlementManager;
 import niwer.photon.web.HttpMethod;
@@ -67,7 +70,8 @@ public class AccountLicenseRevokeEndpoint implements IEndpoint {
             }
     
             final ObjectLicense UPDATED_LICENSE = LicenseTable.getByKey(LICENSE_KEY);
-            handler.json(UPDATED_LICENSE == null ? LICENSE.payload() : UPDATED_LICENSE.payload());
+            handler.status(200).json(UPDATED_LICENSE == null ? LICENSE.payload() : UPDATED_LICENSE.payload());
+            Console.log("License revoked for user: %s", LICENSE.creatorUuid()).sendToProcessor().type(PhotonLogTypes.NETWORK).container(PhotonEngine.LOGGER).send();
         } catch (Exception e) {
             IEndpoint.handleException(AccountLicenseRevokeEndpoint.class, handler, e);
         }

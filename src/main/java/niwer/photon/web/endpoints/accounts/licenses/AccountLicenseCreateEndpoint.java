@@ -6,9 +6,12 @@ import java.util.concurrent.TimeUnit;
 import com.google.gson.JsonObject;
 
 import io.javalin.http.Context;
+import niwer.lumen.Console;
 import niwer.photon.Directories;
+import niwer.photon.PhotonEngine;
 import niwer.photon.objects.ObjectLicense;
 import niwer.photon.util.GsonUtils;
+import niwer.photon.util.PhotonLogTypes;
 import niwer.photon.util.license.LicenseManager;
 import niwer.photon.util.session.SessionManager;
 import niwer.photon.util.stripe.EntitlementManager;
@@ -60,6 +63,7 @@ public class AccountLicenseCreateEndpoint implements IEndpoint {
             }
             
             handler.status(200).json(LICENSE.payload());
+            Console.log("License created for user: %s", LICENSE.creatorUuid()).sendToProcessor().type(PhotonLogTypes.NETWORK).container(PhotonEngine.LOGGER).send();
         } catch (Exception e) {
             IEndpoint.handleException(AccountLicenseCreateEndpoint.class, handler, e);
         }

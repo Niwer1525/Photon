@@ -7,6 +7,7 @@ import niwer.photon.objects.ObjectUserAccount;
 import niwer.photon.sql.PlayerAccountTable;
 import niwer.photon.util.GsonUtils;
 import niwer.photon.util.HashUtils;
+import niwer.photon.util.TotpManager;
 import niwer.photon.web.HttpMethod;
 import niwer.photon.web.endpoints.IEndpoint;
 
@@ -47,6 +48,19 @@ public class UpdateAccountSettingsEndpoint implements IEndpoint {
         if (account == null) {
             handler.status(404).result("Account not found");
             return;
+        }
+
+        /* Enforce 2FA check if enabled */
+        if (account.isTotpEnabled()) {
+            if (request.code == null || request.code.isBlank()) {
+                handler.status(400).result("Two-factor authentication code is required");
+                return;
+            }
+
+            if (!TotpManager.verifyCodeWithRecovery(account.getTotpSecret(), request.code.trim(), account.getUuid())) {
+                handler.status(401).result("Invalid 2FA code");
+                return;
+            }
         }
 
         if (!HashUtils.passwordMatches(account.password(), request.currentPassword)) {
@@ -103,6 +117,7 @@ public class UpdateAccountSettingsEndpoint implements IEndpoint {
         String username,
         String email,
         String newPassword,
-        String confirmPassword
+        String confirmPassword,
+        String code
     ) {}
 }

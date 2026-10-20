@@ -33,7 +33,7 @@ public class AccountLicenseListEndpoint implements IEndpoint {
             }
     
             final List<ObjectLicense> LICENSES = LicenseTable.getByCreatorUuid(ACCOUNT.getUuid());
-            handler.json(LICENSES.stream().map(license -> Objects.requireNonNull(license).payload()).toList());
+            handler.status(200).json(LICENSES.stream().map(license -> Objects.requireNonNull(license).payload()).toList());
         } catch (Exception e) {
             IEndpoint.handleException(AccountLicenseListEndpoint.class, handler, e);
         }

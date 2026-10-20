@@ -24,6 +24,7 @@ import niwer.photon.sql.HWIDTable;
 import niwer.photon.sql.LicenseTable;
 import niwer.photon.sql.PlayerAccountTable;
 import niwer.photon.sql.PurchaseTable;
+import niwer.photon.sql.RecoveryCodesTable;
 import niwer.photon.sql.ServerTable;
 import niwer.photon.sql.SubscriptionTable;
 import niwer.photon.util.AccountRetentionPurger;
@@ -37,7 +38,9 @@ import niwer.queryon.SchemaPrunePolicy;
 import niwer.queryon.backup.DatabaseBackupManager;
 
 /**
- * Main entry point. This class is responsible for initializing stuff, loading features, registering database tables, starting the Discord bot, and launching the web API and server.
+ * Main entry point. This class is responsible for initializing stuff, loading
+ * features, registering database tables, starting the Discord bot, and
+ * launching the web API and server.
  * 
  * @author Niwer
  */
@@ -47,16 +50,20 @@ public class PhotonEngine {
     private static volatile DatabaseBackupManager backupManager = null;
 
     public static final DataBase DATA_BASE = new DataBase(Directories.DATA_BASE_FILE);
-    public static final Container LOGGER = LumenEngine.registerContainer("PhotonEngine").addProcessor((data, time, formattedMessage) -> {
-        if(BotEngine.isBotInitialized()) BotEngine.log(data); // Print the log to the discord channel if the bot is initialized
-    }).setSaveFolder(Directories.LOGS_DIR, "network");
+    public static final Container LOGGER = LumenEngine.registerContainer("PhotonEngine")
+            .addProcessor((data, time, formattedMessage) -> {
+                if (BotEngine.isBotInitialized())
+                    BotEngine.log(data); // Print the log to the discord channel if the bot is initialized
+            }).setSaveFolder(Directories.LOGS_DIR, "network");
 
     /**
-	 * Get the current IP of the user using the Amazon AWS service
-	 * @return the current IP of the user
-	 */
+     * Get the current IP of the user using the Amazon AWS service
+     * 
+     * @return the current IP of the user
+     */
     public static synchronized String getCurrentIP() {
-        if (currentIP != null) return currentIP;
+        if (currentIP != null)
+            return currentIP;
 
         try {
             final URL whatismyip = new URI("http://checkip.amazonaws.com").toURL();
@@ -64,46 +71,53 @@ public class PhotonEngine {
             currentIP = in.readLine();
             in.close();
             return currentIP;
-        } catch (IOException | URISyntaxException e) {}
+        } catch (IOException | URISyntaxException e) {
+        }
         return "UNKNOWN";
     }
 
-	/**
-	 * Check if the current IP is equals to the given IP
+    /**
+     * Check if the current IP is equals to the given IP
      *
-	 * @param ip the IP to check
-	 * @return true if the current IP is equals to the given IP
-	 */
-    public static boolean isIPEquals(String ip) { return ip.equalsIgnoreCase(getCurrentIP()); }
+     * @param ip the IP to check
+     * @return true if the current IP is equals to the given IP
+     */
+    public static boolean isIPEquals(String ip) {
+        return ip.equalsIgnoreCase(getCurrentIP());
+    }
 
-	/**
-	 * Check if the given IP is online (ping)
+    /**
+     * Check if the given IP is online (ping)
      *
-	 * @param op the IP to check
-	 * @return true if the given IP is online
-	 * @throws UnknownHostException : if the IP is not valid
-	 * @throws IOException : if the IP is not reachable
-	 */
-	public static boolean isOnline(String op) throws UnknownHostException, IOException { return InetAddress.getByName(op).isReachable(100); }
+     * @param op the IP to check
+     * @return true if the given IP is online
+     * @throws UnknownHostException : if the IP is not valid
+     * @throws IOException          : if the IP is not reachable
+     */
+    public static boolean isOnline(String op) throws UnknownHostException, IOException {
+        return InetAddress.getByName(op).isReachable(100);
+    }
 
     /**
      * Get the current date in the official format
      *
      * @param showTime if true, the time will be added to the date
-     * @param date the date to format, if null, the current date will be used
+     * @param date     the date to format, if null, the current date will be used
      * @return The formatted current date as a String
      */
-    public static String getDate(boolean showTime) { return getDate(showTime, new Date()); }
+    public static String getDate(boolean showTime) {
+        return getDate(showTime, new Date());
+    }
 
     /**
      * Get the date in the official format
      *
      * @param showTime if true, the time will be added to the date
-     * @param date the date to format, if null, the current date will be used
+     * @param date     the date to format, if null, the current date will be used
      * @return The formatted date as a String
      */
     public static String getDate(boolean showTime, Date date) {
-        return new SimpleDateFormat("dd-mm-yyyy"+(showTime?"_HH-mm-ss":"")).format(date);
+        return new SimpleDateFormat("dd-mm-yyyy" + (showTime ? "_HH-mm-ss" : "")).format(date);
     }
 
     public static void main(final String[] args) {
@@ -118,34 +132,36 @@ public class PhotonEngine {
 
         /* Register tables to the Data Base */
         DATA_BASE
-            /* Security */
-            .registerTable(HWIDTable.class)
-            .registerTable(LicenseTable.class)
-            .registerTable(PurchaseTable.class)
-            .registerTable(SubscriptionTable.class)
-            .registerTable(AnticheatTable.class)
-            .registerTable(CrashReportTable.class)
-            .registerTable(DiscordLogTable.class)
+                /* Security */
+                .registerTable(HWIDTable.class)
+                .registerTable(LicenseTable.class)
+                .registerTable(PurchaseTable.class)
+                .registerTable(SubscriptionTable.class)
+                .registerTable(AnticheatTable.class)
+                .registerTable(CrashReportTable.class)
+                .registerTable(DiscordLogTable.class)
 
-            /* User Accounts */
-            .registerTable(PlayerAccountTable.class)
-            .registerTable(ServerTable.class)
-        ;
+                /* User Accounts */
+                .registerTable(PlayerAccountTable.class)
+                .registerTable(RecoveryCodesTable.class)
+
+                /* Servers */
+                .registerTable(ServerTable.class);
         DATA_BASE.setPrunePolicy(SchemaPrunePolicy.PRUNE_ALL);
 
         /* Run the database backup system */
-        if(Directories.getConfig().database_backup_enabled) {
-            if(!Directories.BACKUPS_DIR.exists()) Directories.BACKUPS_DIR.mkdirs(); // Ensure that the backups directory exists
+        if (Directories.getConfig().database_backup_enabled) {
+            if (!Directories.BACKUPS_DIR.exists())
+                Directories.BACKUPS_DIR.mkdirs(); // Ensure that the backups directory exists
 
             /* Create a backup manager with a scheduler */
-            backupManager = DatabaseBackupManager.createWithScheduler(DATA_BASE, Directories.BACKUPS_DIR, 
-                Directories.getConfig().dbBackupFilePrefix(),
-                (int)Directories.getConfig().database_backup_retention_days,
-                Directories.getConfig().database_backup_interval_minutes
-            );
+            backupManager = DatabaseBackupManager.createWithScheduler(DATA_BASE, Directories.BACKUPS_DIR,
+                    Directories.getConfig().dbBackupFilePrefix(),
+                    (int) Directories.getConfig().database_backup_retention_days,
+                    Directories.getConfig().database_backup_interval_minutes);
 
             /* Create a backup on startup if enabled */
-            if(Directories.getConfig().database_backup_on_startup)
+            if (Directories.getConfig().database_backup_on_startup)
                 backupManager.createBackup("startup-backup");
         }
 
@@ -155,7 +171,8 @@ public class PhotonEngine {
         /* Run the licenses purger */
         LicensePurger.createPurgerScheduler();
 
-        DATA_BASE.syncSchema(); // We're syncing the schema after the backup to ensure that the backup to avoid losing data.
+        DATA_BASE.syncSchema(); // We're syncing the schema after the backup to ensure that the backup to avoid
+                                // losing data.
 
         /* Repopulate Stripe data on startup */
         StripeStartupSync.load();
@@ -167,8 +184,11 @@ public class PhotonEngine {
         WebServerEngine.load();
 
         /* Log that the network server is running */
-        Console.log("Network Server is now running and waiting for connections...").type(PhotonLogTypes.NETWORK).sendToProcessor().container(PhotonEngine.LOGGER).send();
+        Console.log("Network Server is now running and waiting for connections...").type(PhotonLogTypes.NETWORK)
+                .sendToProcessor().container(PhotonEngine.LOGGER).send();
     }
 
-    public static DatabaseBackupManager backupManager() { return backupManager; }
+    public static DatabaseBackupManager backupManager() {
+        return backupManager;
+    }
 }

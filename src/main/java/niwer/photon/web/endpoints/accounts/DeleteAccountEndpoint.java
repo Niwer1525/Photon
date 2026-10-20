@@ -3,9 +3,12 @@ package niwer.photon.web.endpoints.accounts;
 import java.util.concurrent.TimeUnit;
 
 import io.javalin.http.Context;
+import niwer.lumen.Console;
+import niwer.photon.PhotonEngine;
 import niwer.photon.objects.ObjectUserAccount;
 import niwer.photon.sql.PlayerAccountTable;
 import niwer.photon.util.HashUtils;
+import niwer.photon.util.PhotonLogTypes;
 import niwer.photon.util.TotpManager;
 import niwer.photon.util.session.SessionManager;
 import niwer.photon.web.HttpMethod;
@@ -61,7 +64,7 @@ public class DeleteAccountEndpoint implements IEndpoint {
                     return;
                 }
     
-                if (!TotpManager.verifyCode(account.getTotpSecret(), code.trim())) {
+                if (!TotpManager.verifyCodeWithRecovery(account.getTotpSecret(), code.trim(), account.getUuid())) {
                     handler.status(401).result("Invalid 2FA code");
                     return;
                 }
@@ -81,6 +84,7 @@ public class DeleteAccountEndpoint implements IEndpoint {
             handler.res().addHeader("Set-Cookie", "photon_csrf=; Path=/; Max-Age=0; SameSite=Strict");
     
             handler.status(200).result("Account scheduled for deletion. All sessions revoked.");
+            Console.log("Account scheduled for deletion: %s (UUID: %s)", account.getUsername(), account.getUuid()).sendToProcessor().type(PhotonLogTypes.NETWORK).container(PhotonEngine.LOGGER).send();
         } catch (Exception e) {
             IEndpoint.handleException(DeleteAccountEndpoint.class, handler, e);
         }

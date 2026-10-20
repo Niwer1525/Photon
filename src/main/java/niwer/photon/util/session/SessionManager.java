@@ -47,20 +47,24 @@ public final class SessionManager {
      * @return A Session object if the 2FA challenge is successfully completed and the code is valid; null otherwise
      */
     public static Session complete2FA(String ticket, String code) {
-        Pending2FA pending = PENDING_2FA.get(ticket);
-        if (pending == null) return null;
+        final Pending2FA PENDING_CHALLENGE = PENDING_2FA.get(ticket);
+        if (PENDING_CHALLENGE == null) return null;
 
         // Expire pending challenge after 5 minutes
-        if (System.currentTimeMillis() - pending.createdAt() > 300_000) {
+        if (System.currentTimeMillis() - PENDING_CHALLENGE.createdAt() > 300_000) {
             PENDING_2FA.remove(ticket);
             return null;
         }
 
-        ObjectUserAccount account = PlayerAccountTable.getAccountByUUID(pending.uuid());
-        if (account == null || !TotpManager.verifyCode(account.getTotpSecret(), code)) return null;
+        final ObjectUserAccount ACCOUNT = PlayerAccountTable.getAccountByUUID(PENDING_CHALLENGE.uuid());
+        if (ACCOUNT == null || !ACCOUNT.isTotpEnabled() || ACCOUNT.getTotpSecret() == null) return null; // User must have 2FA enabled and a valid secret to complete the challenge
 
-        PENDING_2FA.remove(ticket);
-        return createSession(account, pending.scope());
+        /* If the code is valid, then create the session */
+        if(TotpManager.verifyCodeWithRecovery(ACCOUNT.getTotpSecret(), code, ACCOUNT.getUuid())) {
+            PENDING_2FA.remove(ticket);
+            return createSession(ACCOUNT, PENDING_CHALLENGE.scope());
+        }
+        return null;
     }
 
     /**

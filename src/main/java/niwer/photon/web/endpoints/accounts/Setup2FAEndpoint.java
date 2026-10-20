@@ -4,8 +4,11 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import io.javalin.http.Context;
+import niwer.lumen.Console;
+import niwer.photon.PhotonEngine;
 import niwer.photon.objects.ObjectUserAccount;
 import niwer.photon.sql.PlayerAccountTable;
+import niwer.photon.util.PhotonLogTypes;
 import niwer.photon.util.TotpManager;
 import niwer.photon.util.session.SessionManager;
 import niwer.photon.web.HttpMethod;
@@ -41,14 +44,14 @@ public class Setup2FAEndpoint implements IEndpoint {
                 String rawSecret = TotpManager.generateRawSecret();
                 String encryptedSecret = TotpManager.encrypt(rawSecret);
                 String qrUri = TotpManager.generateQrDataUri(account.getEmail(), rawSecret);
-    
                 PlayerAccountTable.setTotpSecret(account.getUuid(), encryptedSecret); // Save secret to database (totpEnabled remains false until verified)
-    
-                handler.json(Map.of(
+                handler.status(200).json(Map.of(
                     "qrCode", qrUri,
                     "manualKey", rawSecret
                 ));
+                Console.log("2FA setup initiated for account %s (UUID: %s)", account.getUsername(), account.getUuid()).sendToProcessor().type(PhotonLogTypes.NETWORK).container(PhotonEngine.LOGGER).send();
             } catch (Exception e) {
+                Console.log("Error while setting up 2FA for account %s: %s", account.getUsername(), e.getMessage()).error().sendToProcessor().type(PhotonLogTypes.NETWORK).container(PhotonEngine.LOGGER).send();
                 handler.status(500).result("Failed to initiate 2FA setup");
             }
         } catch (Exception e) {

@@ -55,14 +55,13 @@ public class ChangePasswordEndpoint implements IEndpoint {
             return;
         }
 
-        // --- 2FA Verification Check ---
         if (account.isTotpEnabled()) {
             if (request.code == null || request.code.isBlank()) {
                 handler.status(403).result("2FA code required");
                 return;
             }
 
-            if (!TotpManager.verifyCode(account.getTotpSecret(), request.code)) {
+            if (!TotpManager.verifyCodeWithRecovery(account.getTotpSecret(), request.code, account.getUuid())) {
                 handler.status(401).result("Invalid 2FA code");
                 return;
             }

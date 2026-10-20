@@ -1,7 +1,11 @@
 package niwer.photon.util;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.security.SecureRandom;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
@@ -17,6 +21,7 @@ import dev.samstevens.totp.secret.DefaultSecretGenerator;
 import dev.samstevens.totp.time.SystemTimeProvider;
 import dev.samstevens.totp.util.Utils;
 import niwer.photon.Directories;
+import niwer.photon.sql.RecoveryCodesTable;
 
 /**
  * This class manages TOTP (Time-based One-Time Password) operations, including generating secrets, creating QR codes for authenticator apps, verifying codes, and encrypting/decrypting secrets.
@@ -28,11 +33,51 @@ public class TotpManager {
     private static final int TAG_LENGTH_BITS = 128;
     private static final int IV_LENGTH = 12;
     private static final SecretKey SECRET_KEY = new SecretKeySpec(Directories.getConfig().getTotpSecretBytes(), "AES");
-
     private static final DefaultCodeVerifier VERIFIER = new DefaultCodeVerifier(
         new DefaultCodeGenerator(HashingAlgorithm.SHA1),
         new SystemTimeProvider()
     );
+	private static final int RECOVERY_CODE_LENGTH = 8;
+	private static final char[] RECOVERY_CODE_ALPHABET = "1234567890".toCharArray(); // Only digits for recovery codes
+
+    private static String generateRecoveryCode(String creatorUuid) {
+        try {
+            // Add entropy so keys can be regenerated if revoked
+            byte[] nonce = new byte[8];
+            new SecureRandom().nextBytes(nonce);
+
+            // Cryptographic digest across inputs + nonce
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            digest.update((creatorUuid).getBytes(StandardCharsets.UTF_8));
+            byte[] hash = digest.digest(nonce);
+
+            // Pick non-sequential pseudo-random characters using the hash bytes
+            StringBuilder builder = new StringBuilder();
+            int hashIndex = 0;
+
+            for (int i = 0; i < RECOVERY_CODE_LENGTH; i++) {
+                int b = hash[hashIndex++ % hash.length] & 0xFF;
+                builder.append(RECOVERY_CODE_ALPHABET[b % RECOVERY_CODE_ALPHABET.length]);
+            }
+
+            return builder.toString();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to generate recovery code", e);
+        }
+    }
+
+    /**
+     * Generate a list of recovery codes for a user. Each code is unique.
+     * 
+     * @param creatorUuid The UUID of the user for whom the recovery codes are being generated
+     * @param count The number of recovery codes to generate
+     * @return A list of generated recovery codes
+     */
+    public static List<String> generateRecoveryCodes(String creatorUuid, int count) {
+        final List<String> CODES = new ArrayList<>();
+        for (int i = 0; i < count; i++) CODES.add(generateRecoveryCode(creatorUuid));
+        return CODES;
+    }
 
     public static String generateRawSecret() {
         return new DefaultSecretGenerator(32).generate();
@@ -76,6 +121,20 @@ public class TotpManager {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    /**
+     * Verify a TOTP code against an encrypted secret, and if invalid, check against recovery codes for the user.
+     * If a recovery code is used, it is consumed (deleted) so it cannot be reused.
+     * 
+     * @param encryptedSecret The encrypted secret key to verify against
+     * @param code The TOTP or recovery code to verify
+     * @param userUuid The UUID of the user for whom the code is being verified
+     * @return true if the code is valid (either TOTP or recovery), false otherwise
+     */
+    public static boolean verifyCodeWithRecovery(String encryptedSecret, String code, String userUuid) {
+        if (verifyCode(encryptedSecret, code)) return true; // Valid TOTP code
+        return RecoveryCodesTable.verifyAndConsumeCode(userUuid, code); // Check recovery codes
     }
 
     /**

@@ -118,7 +118,6 @@ public class Directories
 		@SerializedName("discord_bot_id") public String discord_bot_id = "";
 		@SerializedName("official_discord_server_id") public String official_discord_server_id = "";
 		@SerializedName("network_console_channel_id") public String network_console_channel_id = "";
-		@SerializedName("server_creator_role_id") public String server_creator_role_id = ""; // Only working on the official guild.
 		
 		/* Web Server */
 		@SerializedName("webserver_host") public String webserver_host = null; // null = all interfaces,
@@ -158,11 +157,6 @@ public class Directories
 		@SerializedName("youtube_url") public String youtube_url = "https://youtube.com/";
 		@SerializedName("discord_url") public String discord_url = "https://discord.gg/";
 		@SerializedName("website_url") public String website_url = "https://google.com";
-
-		@SerializedName("store_url") public String store_url = "";
-		@SerializedName("terms_of_service_url") public String terms_of_service_url = "";
-		@SerializedName("terms_of_sale_url") public String terms_of_sale_url = "";
-		@SerializedName("privacy_policy_url") public String privacy_policy_url = "";
 
 		@SerializedName("account_retention_days") public int account_retention_days = 14; // Default retention period for deleted accounts (in days)
 		@SerializedName("totp_issuer") public String totp_issuer = "Photon";

@@ -4,9 +4,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import io.javalin.http.Context;
+import niwer.lumen.Console;
+import niwer.photon.PhotonEngine;
 import niwer.photon.objects.ObjectUserAccount;
 import niwer.photon.sql.PlayerAccountTable;
 import niwer.photon.sql.PurchaseTable;
+import niwer.photon.util.PhotonLogTypes;
 import niwer.photon.util.session.Session;
 import niwer.photon.util.session.SessionManager;
 import niwer.photon.util.session.SessionScope;
@@ -96,7 +99,8 @@ public class CreateAccountEndpoint implements IEndpoint {
                 return;
             }
     
-            handler.json(new LoginResponse(SESSION.token(), SESSION.refreshToken(), ACCOUNT.payload()));
+            handler.status(200).json(new LoginResponse(SESSION.token(), SESSION.refreshToken(), ACCOUNT.payload()));
+            Console.log("A new account was created: %s (UUID: %s)", ACCOUNT.getUsername(), ACCOUNT.getUuid()).sendToProcessor().type(PhotonLogTypes.NETWORK).container(PhotonEngine.LOGGER).send();
         } catch (Exception e) {
             IEndpoint.handleException(CreateAccountEndpoint.class, handler, e);
         }
