@@ -29,8 +29,8 @@ import niwer.photon.web.endpoints.accounts.licenses.AccountLicenseCreateEndpoint
 import niwer.photon.web.endpoints.accounts.licenses.AccountLicenseListEndpoint;
 import niwer.photon.web.endpoints.accounts.licenses.AccountLicenseProductsEndpoint;
 import niwer.photon.web.endpoints.accounts.licenses.AccountLicenseRevokeEndpoint;
-import niwer.photon.web.endpoints.admin.AdminTableDataEndpoint;
 import niwer.photon.web.endpoints.admin.AdminSqlEndpoint;
+import niwer.photon.web.endpoints.admin.AdminTableDataEndpoint;
 import niwer.photon.web.endpoints.admin.AdminTablesEndpoint;
 import niwer.photon.web.endpoints.game.AddAntiCheatReportEndpoint;
 import niwer.photon.web.endpoints.game.AddCrashReportEndpoint;
@@ -60,13 +60,17 @@ public class WebServerEngine {
                 cfg.startup.showJavalinBanner = false;
                 System.out.println("SLF4J Provider: " + LoggerFactory.getILoggerFactory().getClass().getName());
 
-                /* Set the static files directory (index.html, main.css, main.js, etc.) */
-                cfg.staticFiles.add("/public");
-
                 /* Register plugins */
                 cfg.registerPlugin(new RateLimitPlugin(plugin_cfg -> {
                     plugin_cfg.setKeyFunction(ctx -> ctx.ip() + "-" + ctx.path()); // Use IP and path as the key for rate limiting
                 }));
+                cfg.bundledPlugins.enableCors(cors -> {
+                    cors.addRule(it -> {
+                        it.allowHost(Directories.getConfig().isDevEnvironment() ? "http://localhost:3000" : "https://niwer.dev");
+                        it.allowCredentials = true; // Required to pass cookies, auth sessions, or credentials
+                        it.exposeHeader("X-Photon-User-Token");
+                    });
+                });
 
                 /* Endpoints */
                 IEndpoint.register(cfg, HomeEndpoint.class);
