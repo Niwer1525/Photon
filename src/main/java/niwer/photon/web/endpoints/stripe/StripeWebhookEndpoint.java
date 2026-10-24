@@ -12,6 +12,7 @@ import io.javalin.http.Context;
 import niwer.lumen.Console;
 import niwer.photon.Directories;
 import niwer.photon.PhotonEngine;
+import niwer.photon.objects.ObjectProduct;
 import niwer.photon.sql.PurchaseTable;
 import niwer.photon.sql.SubscriptionTable;
 import niwer.photon.util.GitHubProvisioningService;
@@ -84,15 +85,32 @@ public class StripeWebhookEndpoint implements IEndpoint {
         SubscriptionTable.upsertSubscription(sub);
 
         /* Manage access of the repository to the user if one is provided. */
-        String githubUsername = sub.getMetadata() != null ? sub.getMetadata().get("github_username") : null;
+        final String GITHUB_USERNAME = sub.getMetadata() != null ? sub.getMetadata().get("github_username") : null;
+        final ObjectProduct PRODUCT = getProductFromSubscription(sub);
         if (StripeHelper.mapSubscriptionStatus(sub.getStatus()).isActive()) // If the subscription is active, provision access to the repository for the user.
-            GitHubProvisioningService.provisionAsync(githubUsername);
+            GitHubProvisioningService.provisionAsync(GITHUB_USERNAME, PRODUCT);
         else // Otherwise, revoke access to the repository for the user.
-            GitHubProvisioningService.revokeAsync(sub.getCustomer());
+            GitHubProvisioningService.revokeAsync(sub.getCustomer(), PRODUCT);
     }
 
     private void handleSubscriptionDeleted(Subscription sub) {
         SubscriptionTable.cancelSubscription(sub.getId());
-        GitHubProvisioningService.revokeAsync(sub.getCustomer());
+        GitHubProvisioningService.revokeAsync(sub.getCustomer(), getProductFromSubscription(sub));
+    }
+
+    private static ObjectProduct getProductFromSubscription(Object obj) {
+        if(obj instanceof Session session) {
+            final var PRICE = StripeHelper.getPriceFromSession(session);
+            if (PRICE == null) return null;
+
+            return Directories.config().productByStripePriceId(PRICE.getId());
+        }
+        if(obj instanceof Subscription sub) {
+            final var PRICE = (sub.getItems() != null && !sub.getItems().getData().isEmpty()) ? sub.getItems().getData().get(0).getPrice() : null;
+            if (PRICE == null) return null;
+
+            return Directories.config().productByStripePriceId(PRICE.getId());
+        }
+        return null;
     }
 }

@@ -5,8 +5,8 @@ import java.net.http.HttpResponse;
 import com.google.gson.annotations.SerializedName;
 
 import niwer.lumen.Console;
-import niwer.photon.Directories;
 import niwer.photon.PhotonEngine;
+import niwer.photon.objects.ObjectProduct.ObjectGithubTemplate;
 import niwer.photon.util.PhotonLogTypes;
 import niwer.photon.web.HttpMethod;
 
@@ -22,18 +22,26 @@ public class CreateRepositoryRequest extends GithubApiRequest<Void> {
     @SerializedName("description") private final String description;
     @SerializedName("include_all_branches") private final boolean include_all_branches = false; // We only include the default branch for now
     @SerializedName("private") private final boolean private_repo = true; // We're only creating private repos for now
+    
+    private final transient String templateRepoOwner;
+    private final transient String templateRepoName;
 
-    private final transient String TEMPLATE_NAME = Directories.config().github_template_repo;
-
-    public CreateRepositoryRequest(String customer) {
-        this.owner = Directories.config().github_new_repo_owner;
-        this.name = TEMPLATE_NAME + "-" + this.sanitizeAndLower(customer);
+    public CreateRepositoryRequest(String customer, String newRepoOwner, String templateOwner, String templateRepoName) {
+        this.owner = newRepoOwner;
+        this.name = templateRepoName + "-" + this.sanitizeAndLower(customer);
         this.description = "Repository for " + customer;
+
+        this.templateRepoOwner = templateOwner;
+        this.templateRepoName = templateRepoName;
+    }
+
+    public CreateRepositoryRequest(String customer, ObjectGithubTemplate template) {
+        this(customer, template.newRepoOwner(), template.repoOwner(), template.repoName());
     }
     
     @Override
     public String url() {
-        return String.format("https://api.github.com/repos/%s/%s/generate", Directories.config().github_template_owner, TEMPLATE_NAME);
+        return String.format("https://api.github.com/repos/%s/%s/generate", this.templateRepoOwner, this.templateRepoName);
     }
 
     @Override

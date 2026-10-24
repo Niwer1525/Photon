@@ -7,12 +7,33 @@ import com.stripe.model.Price;
 import com.stripe.model.Subscription;
 import com.stripe.model.SubscriptionItem;
 import com.stripe.model.checkout.Session;
+import com.stripe.param.checkout.SessionListLineItemsParams;
 
+import niwer.lumen.Console;
 import niwer.photon.Directories;
+import niwer.photon.PhotonEngine;
+import niwer.photon.util.PhotonLogTypes;
 
 public final class StripeHelper {
 
     private StripeHelper() {}
+
+    /**
+     * Retrieves the Price object associated with a Stripe Checkout Session. This method fetches the line items of the session and returns the price of the first item, if available.
+     * 
+     * @param session The Stripe Checkout Session from which to retrieve the price.
+     * @return The Price object of the first line item in the session, or null if it cannot be retrieved.
+     */
+    public static Price getPriceFromSession(Session session) {
+        try {
+            final var LINE_ITEMS = session.listLineItems(SessionListLineItemsParams.builder().setLimit(1L).build());
+            if (LINE_ITEMS != null && !LINE_ITEMS.getData().isEmpty()) return LINE_ITEMS.getData().get(0).getPrice();
+        } catch (Exception ignored) {
+            Console.log("Failed to retrieve line items for session " + session.getId() + ": " + ignored.getMessage()).error().type(PhotonLogTypes.STRIPE).error().container(PhotonEngine.LOGGER).send();
+            return null;
+        }
+        return null;
+    }
 
     /**
      * Maps a Stripe subscription status to a StripePurchaseStatus enum value.

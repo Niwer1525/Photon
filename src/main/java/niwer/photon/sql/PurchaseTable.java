@@ -6,7 +6,6 @@ import java.util.List;
 import com.stripe.model.Customer;
 import com.stripe.model.Price;
 import com.stripe.model.checkout.Session;
-import com.stripe.param.checkout.SessionListLineItemsParams;
 
 import niwer.photon.PhotonEngine;
 import niwer.photon.objects.ObjectPurchase;
@@ -64,12 +63,7 @@ public class PurchaseTable extends Table {
 	public static ObjectPurchase upsertCompletedPurchase(Session session) {
         if (session == null || session.getId() == null) return null;
 
-        Price price = null;
-        try {
-            final var LINE_ITEMS = session.listLineItems(SessionListLineItemsParams.builder().setLimit(1L).build());
-            if (LINE_ITEMS != null && !LINE_ITEMS.getData().isEmpty()) price = LINE_ITEMS.getData().get(0).getPrice();
-        } catch (Exception ignored) {}
-
+        final Price PRICE = StripeHelper.getPriceFromSession(session);
         final Customer CUSTOMER = session.getCustomerObject();
         final var DETAILS = session.getCustomerDetails();
 
@@ -80,7 +74,7 @@ public class PurchaseTable extends Table {
         final String TOKEN = session.getClientReferenceId() != null && !session.getClientReferenceId().isBlank() ? session.getClientReferenceId() : session.getId();
         final String GH_USERNAME = session.getMetadata() != null ? session.getMetadata().get("github_username") : null;
 
-        return upsertCompletedPurchase(TOKEN, session.getId(), CUSTOMER_ID, EMAIL, NAME, STATUS, GH_USERNAME, StripeHelper.resolveProductId(price));
+        return upsertCompletedPurchase(TOKEN, session.getId(), CUSTOMER_ID, EMAIL, NAME, STATUS, GH_USERNAME, StripeHelper.resolveProductId(PRICE));
     }
 
 	public static ObjectPurchase upsertCompletedPurchase(String purchaseToken, String checkoutSessionId, String stripeCustomerId, String customerEmail, String customerName, StripePurchaseStatus status, String githubUsername, String productId) {

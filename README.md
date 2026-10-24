@@ -48,8 +48,9 @@ Photon is configured via a JSON file : `network/config.json`, which contains set
 	- `database_backup_file_prefix` controls the generated backup filename prefix.
 
 - **Licenses**
-	- `products` is a list of products available when creating a license. Each entry contains an `id`, display `name`, optional `default_license_duration_days`, and Stripe `stripe_price_ids`. Photon retrieves Checkout Session line items from Stripe and matches their Price ID against `stripe_price_ids`.
-	**Product**
+	- `products` is a list of products available when creating a license.
+	
+	- **Product**
 		- `id` is the unique identifier for the product.
 		- `name` is the display name for the product.
 		- `discord_role_id` is the Discord role ID to assign to users who purchase this product.
@@ -60,6 +61,12 @@ Photon is configured via a JSON file : `network/config.json`, which contains set
 		- `repo_owner` is the GitHub repository owner for this product's assets.
 		- `repo_name` is the GitHub repository name for this product's assets.
 		- `excluded_release_tags` is a list of release tags to exclude when fetching assets from GitHub. Photon will ignore releases with these tags when listing available assets for this product.
+
+		- **Github Template**
+			- `template_repo_owner` is the GitHub repository owner for the template repository used to create new repositories for this product.
+			- `template_repo_name` is the GitHub repository name for the template repository used to create new repositories for this product.
+			- `new_repo_owner` is the GitHub repository owner for new repositories created for this product. Photon will create new repositories under this owner when provisioning assets for users who purchase this product.
+			- `github_customer_teams` is a list of GitHub team slugs to which users will be added when they purchase this product. Photon will add users to these teams in the new repository created for this product.
 
 - **Github**
 	- `github_pat` is the personal access token used to access GitHub API for accessing private repositories and assets.

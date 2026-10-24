@@ -29,6 +29,8 @@ public class ObjectProduct implements IPayloadProvider {
     @SerializedName("repo_name") private String repoName;
     @SerializedName("excluded_release_tags") private Set<String> excludedReleaseTags; // Excluded release tags (e.g., ["v0.1.0-alpha", "v1.0.4-broken"])
 
+    @SerializedName("github_template") private ObjectGithubTemplate githubTemplate; // The GitHub template repository to use when creating new repositories for users.
+
     public ObjectProduct() {}
 
     public ObjectProduct(String id, String name, Long defaultDurationDays) {
@@ -66,6 +68,8 @@ public class ObjectProduct implements IPayloadProvider {
         return this.excludedReleaseTags == null ? Collections.emptySet() : this.excludedReleaseTags;
     }
 
+    public ObjectGithubTemplate githubTemplate() { return this.githubTemplate; }
+
     /**
      * @return True if the config for this product has repo owner and has a repo name.
      */
@@ -87,5 +91,27 @@ public class ObjectProduct implements IPayloadProvider {
     public String toString() {
         return String.format("ObjectProduct{id='%s', name='%s', is_license_required=%s, default_license_duration_days=%s, stripe_price_ids=%s, repo_owner='%s', repo_name='%s', excluded_release_tags=%s}",
             id, name, isLicenseRequired, defaultLicenseDurationDays, stripePriceIDs, repoOwner, repoName, excludedReleaseTags);
+    }
+
+    public static final class ObjectGithubTemplate {
+        @SerializedName("template_repo_owner") private String repoOwner; // The owner of the template repository to use when creating new repositories for users.
+        @SerializedName("template_repo_name") private String repoName; // The name of the template repository to use when creating new repositories for users.
+        @SerializedName("new_repo_owner") private String newRepoOwner; // The owner of the new repository to create.
+        @SerializedName("customer_teams") private Set<String> customerTeams = Set.of("customers"); // The GitHub teams (slugs) that will be added to the new repository when created.
+
+        public boolean isEmpty() {
+            return (this.repoOwner == null || this.repoOwner.isBlank())
+                && (this.repoName == null || this.repoName.isBlank())
+                && (this.newRepoOwner == null || this.newRepoOwner.isBlank())
+                && (this.customerTeams == null || this.customerTeams.isEmpty());
+        }
+
+        public String repoOwner() { return this.repoOwner; }
+
+        public String repoName() { return this.repoName; }
+
+        public String newRepoOwner() { return this.newRepoOwner; }
+
+        public Set<String> customerTeams() { return this.customerTeams; }
     }
 }

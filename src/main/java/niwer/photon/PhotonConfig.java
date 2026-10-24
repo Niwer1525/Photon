@@ -40,10 +40,6 @@ public class PhotonConfig {
 
     /* Github */
     @SerializedName("github_pat") public String github_pat = ""; // Personal Access Token for GitHub API authentication
-    @SerializedName("github_template_repo") public String github_template_repo = ""; // The template repository to use when creating new repositories for users
-    @SerializedName("github_template_owner") public String github_template_owner = ""; // The owner of the template repository to use when creating new repositories for users
-    @SerializedName("github_new_repo_owner") public String github_new_repo_owner = ""; // The owner of the new repository to create
-    @SerializedName("github_customer_team") public String github_customer_team = "customers"; // The team slug for the "customers" team in the GitHub organization
 
     /* Mail */
     @SerializedName("mail_sender_email") public String mail_sender_email = "sender@example.org";

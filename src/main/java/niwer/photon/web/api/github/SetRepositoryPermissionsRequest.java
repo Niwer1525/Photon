@@ -5,8 +5,8 @@ import java.net.http.HttpResponse;
 import com.google.gson.annotations.SerializedName;
 
 import niwer.lumen.Console;
-import niwer.photon.Directories;
 import niwer.photon.PhotonEngine;
+import niwer.photon.objects.ObjectProduct.ObjectGithubTemplate;
 import niwer.photon.util.PhotonLogTypes;
 import niwer.photon.web.HttpMethod;
 
@@ -22,18 +22,28 @@ public class SetRepositoryPermissionsRequest extends GithubApiRequest<Void> {
 
     private final transient String repositoryName;
     private final transient String githubUsername;
+    private final transient String templateRepoOwner;
 
-    public SetRepositoryPermissionsRequest(String githubUsername) { this(githubUsername, "admin"); }
+    public SetRepositoryPermissionsRequest(String githubUsername, ObjectGithubTemplate template) {
+        this(githubUsername, template, "admin");
+    }
 
-    public SetRepositoryPermissionsRequest(String githubUsername, String permission) {
+    public SetRepositoryPermissionsRequest(String githubUsername, ObjectGithubTemplate template, String permission) {
+        this(githubUsername, template.newRepoOwner(), template.repoName(), permission);
+    }
+
+    public SetRepositoryPermissionsRequest(String githubUsername, String templateRepoOwner, String templateRepoName) { this(githubUsername, templateRepoOwner, templateRepoName, "admin"); }
+
+    public SetRepositoryPermissionsRequest(String githubUsername, String templateRepoOwner, String templateRepoName, String permission) {
         this.githubUsername = githubUsername;
-        this.repositoryName = Directories.config().github_template_repo + "-" + this.sanitizeAndLower(githubUsername);
+        this.templateRepoOwner = templateRepoOwner;
+        this.repositoryName = templateRepoName + "-" + this.sanitizeAndLower(githubUsername);
         this.permission = permission != null ? permission : "admin";
     }
 
     @Override
     public String url() {
-        return String.format("https://api.github.com/repos/%s/%s/collaborators/%s", Directories.config().github_new_repo_owner, this.repositoryName, this.githubUsername);
+        return String.format("https://api.github.com/repos/%s/%s/collaborators/%s", this.templateRepoOwner, this.repositoryName, this.githubUsername);
     }
 
     @Override

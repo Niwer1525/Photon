@@ -3,8 +3,8 @@ package niwer.photon.web.api.github;
 import java.net.http.HttpResponse;
 
 import niwer.lumen.Console;
-import niwer.photon.Directories;
 import niwer.photon.PhotonEngine;
+import niwer.photon.objects.ObjectProduct.ObjectGithubTemplate;
 import niwer.photon.util.PhotonLogTypes;
 import niwer.photon.web.HttpMethod;
 
@@ -18,20 +18,23 @@ public class RemoveRepositoryCollaboratorRequest extends GithubApiRequest<Void> 
 
     private final transient String repositoryName;
     private final transient String githubUsername;
+    private final transient String newRepoOwner;
 
-    public RemoveRepositoryCollaboratorRequest(String githubUsername) {
+    public RemoveRepositoryCollaboratorRequest(String githubUsername, ObjectGithubTemplate template) {
         this.githubUsername = githubUsername;
-        this.repositoryName = Directories.config().github_template_repo + "-" + this.sanitizeAndLower(githubUsername);
+        this.repositoryName = template.repoName() + "-" + this.sanitizeAndLower(githubUsername);
+        this.newRepoOwner = template.newRepoOwner();
     }
 
-    public RemoveRepositoryCollaboratorRequest(String repositoryName, String githubUsername) {
+    public RemoveRepositoryCollaboratorRequest(String repositoryName, String githubUsername, String newRepoOwner) {
         this.repositoryName = repositoryName;
         this.githubUsername = githubUsername;
+        this.newRepoOwner = newRepoOwner;
     }
 
     @Override
     public String url() {
-        return String.format("https://api.github.com/repos/%s/%s/collaborators/%s", Directories.config().github_new_repo_owner, this.repositoryName, this.githubUsername);
+        return String.format("https://api.github.com/repos/%s/%s/collaborators/%s", this.newRepoOwner, this.repositoryName, this.githubUsername);
     }
 
     @Override
