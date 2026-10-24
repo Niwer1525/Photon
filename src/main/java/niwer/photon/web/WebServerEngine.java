@@ -12,6 +12,7 @@ import niwer.photon.util.PhotonLogTypes;
 import niwer.photon.web.endpoints.HomeEndpoint;
 import niwer.photon.web.endpoints.IEndpoint;
 import niwer.photon.web.endpoints.LicenseValidateEndpoint;
+import niwer.photon.web.endpoints.LogoEndpoint;
 import niwer.photon.web.endpoints.accounts.AccountEntitlementsEndpoint;
 import niwer.photon.web.endpoints.accounts.AuthAccountEndpoint;
 import niwer.photon.web.endpoints.accounts.ChangePasswordEndpoint;
@@ -74,6 +75,7 @@ public class WebServerEngine {
 
                 /* Endpoints */
                 IEndpoint.register(cfg, HomeEndpoint.class);
+                IEndpoint.register(cfg, LogoEndpoint.class);
                 IEndpoint.register(cfg, StatusServersEndpoint.class);
                 IEndpoint.register(cfg, InfoEndpoint.class);
                 IEndpoint.register(cfg, AddCrashReportEndpoint.class);

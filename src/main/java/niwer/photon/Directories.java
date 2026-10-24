@@ -72,11 +72,11 @@ public class Directories
 	}
 	
 	/**
-	 * Get the official logo as a Base64 string
+	 * Get the official logo as a BufferedImage
 	 * 
-	 * @return The official logo as a Base64 string, or null if it cannot be loaded
+	 * @return The official logo as a BufferedImage, or null if it cannot be loaded
 	 */
-	public static String getOfficialLogoBase64() {
+	public static BufferedImage getOfficialLogoImage() {
 		try {
 			if(!LOGO_FILE.exists()) { // If there is no logo, then try to "download" the official one from the jar
 				try(final InputStream STREAM = OperatingSystem.loadFile("photon_logo.png"); final FileOutputStream FOS = new FileOutputStream(LOGO_FILE)) {
@@ -92,6 +92,27 @@ public class Directories
 				return null;
 			}
 			
+			return IMAGE;
+		} catch (IOException e) {
+			Console.log("Error loading game logo: " + e.getMessage()).error().type(PhotonLogTypes.NETWORK).container(PhotonEngine.LOGGER).send();
+			e.printStackTrace();
+			return null;
+		}	
+	}
+
+	/**
+	 * Get the official logo as a Base64 string
+	 * 
+	 * @return The official logo as a Base64 string, or null if it cannot be loaded
+	 */
+	public static String getOfficialLogoBase64() {
+		try {
+			final BufferedImage IMAGE = getOfficialLogoImage();
+			if (IMAGE == null) {
+				Console.log("Failed to load game logo for Base64 conversion").error().type(PhotonLogTypes.NETWORK).container(PhotonEngine.LOGGER).send();
+				return null;
+			}
+
 			/* Convert the image to a byte array */
 			final ByteArrayOutputStream BAOS = new ByteArrayOutputStream();
 			ImageIO.write(IMAGE, "png", BAOS);
