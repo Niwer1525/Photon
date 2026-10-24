@@ -21,7 +21,7 @@ import niwer.photon.web.endpoints.IEndpoint;
 
 public class AccountLicenseCreateEndpoint implements IEndpoint {
 
-    @Override public String path() { return "/accounts/licenses"; }
+    @Override public String path() { return "/accounts/licenses/create"; }
 
     @Override public HttpMethod method() { return HttpMethod.POST; }
 

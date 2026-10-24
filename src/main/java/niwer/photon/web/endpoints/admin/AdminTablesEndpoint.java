@@ -20,7 +20,7 @@ public class AdminTablesEndpoint implements IEndpoint {
         new TableInfo("DiscordLog", "DiscordLog", "Moderation logs")
     );
 
-    @Override public String path() { return "/api/admin/tables"; }
+    @Override public String path() { return "/admin/tables"; }
 
     @Override public HttpMethod method() { return HttpMethod.GET; }
 

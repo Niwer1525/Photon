@@ -12,7 +12,7 @@ import niwer.photon.web.endpoints.IEndpoint;
  */
 public class StatusServersEndpoint implements IEndpoint {
 
-    @Override public String path() { return "/api/status/servers"; }
+    @Override public String path() { return "/servers/status"; }
 
     @Override public HttpMethod method() { return HttpMethod.GET; }
 

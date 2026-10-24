@@ -18,7 +18,7 @@ import niwer.photon.web.endpoints.IEndpoint;
 
 public class AdminTableDataEndpoint implements IEndpoint {
 
-    @Override public String path() { return "/api/admin/tables/{table}"; }
+    @Override public String path() { return "/admin/tables/{table}"; }
 
     @Override public HttpMethod method() { return HttpMethod.GET; }
 

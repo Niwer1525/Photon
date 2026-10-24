@@ -89,30 +89,54 @@ Photon is configured via a JSON file : `network/config.json`, which contains set
 
 ## Endpoints
 
-The routes below are the ones typically called by the game client, launcher, Stripe, or server processes. Admin-panel routes are kept in a separate section.
+The routes below are the ones typically called by the game client, launcher, Stripe, or front-end.
+
+### Public endpoints
+
+- **General**
+	- `GET /` — Sends you back to `niwer.dev/panel`
+	- `GET /photon_logo` — Returns the Photon logo image.
 
 - **Accounts**
 	- `POST /accounts/create_account` — Create an account.
 		- Required fields: `username`, `email`, `password`.
-		- Optional purchase flow fields: `token` or `checkoutSessionId`.
-		- If no purchase token is provided, the email must already have an active subscription.
+		- Optional purchase flow fields: `token`.
 	- `POST /accounts/auth_account` — Log in and return `{ token, account }`.
 		- Required fields: `email`, `password`.
 	- `GET /accounts/me` — Return the current account.
 		- Auth via `X-Photon-User-Token` or `Authorization: Bearer <token>`.
-	- `GET /accounts/entitlements` — Return the account's subscriptions and one-time product purchases.
 	- `POST /accounts/change_password` — Change a password.
 		- Required body fields: `email`, `currentPassword`, `newPassword`.
 	- `POST /accounts/update_profile` — Update username, email, or password.
 		- Required body fields: `uuid`, `currentPassword`, optional `username`, `email`, `newPassword`, `confirmPassword`.
-	- `GET /accounts/licenses` — List the caller’s licenses.
-	- `POST /accounts/licenses` — Create a license for the current subscriber.
-	- `POST /accounts/licenses/revoke` — Revoke one of the caller’s licenses.
+
+	- **Purchases**
+		- `GET /accounts/entitlements` — Return the account's subscriptions and one-time product purchases.
+
+	- **Licenses**
+		- `GET /accounts/licenses` — List the caller’s licenses.
+		- `GET /accounts/license-products` — List the products available for license creation.
+		- `POST /accounts/license/create` — Create a license for the current subscriber.
+			- Required body fields: `productId`, `name`.
+			- Optional body fields: `durationDays`.
+		- `POST /accounts/licenses/revoke` — Revoke one of the caller’s licenses.
+			- Required body fields: `license_key`.
+
+	- **Two-Factor Authentication (TOTP)**
+		- `POST /accounts/auth_account/2fa` — Validate a TOTP code for two-factor authentication (when logging in).
+			- Required body fields: `ticket`, `code`.
+		- `GET /accounts/setup` — Setup two-factor authentication for the current account.
+		- `POST /accounts/2fa/confirm` — Confirm two-factor authentication setup for the current account.
+			- Required body fields: `code`.
+		- `POST /accounts/2fa/disable` — Disable two-factor authentication for the current account.
+			- Required body fields: `code`.
 
 - **Updates**
 	- `GET /download/list` — List available download assets.
 	- `GET /download` — Download a specific asset from GitHub.
 		- Required query parameters: `assetId`, `product`, `assetName`.
+	- `GET /download/version` — Retrieve the latest version of a specific product using GitHub.
+		- Required query parameters: `product`.
 
 - **Software (Games / Applications / Launchers)**
 	- `GET /game/config` — Public runtime config used by the client.
@@ -128,17 +152,21 @@ The routes below are the ones typically called by the game client, launcher, Str
 
 - **Servers**
 	- `POST /servers/add-server` — Register or update a server entry.
-		- The request IP must match the remote IP.
 	- `GET /servers/server-list` — List known servers.
-	- `GET /api/status/servers` — Status-oriented server listing used by the web UI.
+	- `GET /servers/status` — Status-oriented server listing.
 
 - **Stripe**
 	- `POST /stripe/webhook` — Stripe webhook endpoint.
 		- Receives subscription events such as `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`.
 		- Also handles `checkout.session.completed` for the purchase-token flow.
 
-## Admin endpoints
+### Admin endpoints
 
 These routes require an admin session or admin token.
-- `GET /api/admin/tables`
-- `GET /api/admin/tables/{table}`
+
+- **SQL & Tables**
+	- `POST /admin/sql` — Execute a SQL query on the database.
+		- Required body field: `sql`.
+	- `GET /admin/tables` — List all tables in the database.
+	- `GET /admin/tables/{table}` — List all rows in a specific table.
+		- Required path parameter: `table`.

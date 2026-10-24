@@ -21,7 +21,6 @@ import niwer.photon.web.endpoints.IEndpoint;
 
 /**
  * TODO: This endpoint is a prototype made to be as safe as possible.
- * AdminSqlEndpoint
  */
 public class AdminSqlEndpoint implements IEndpoint {
     private static final int MAX_SQL_LENGTH = 2000;
@@ -29,7 +28,7 @@ public class AdminSqlEndpoint implements IEndpoint {
     private static final Pattern SAFE_SQL = Pattern.compile("[\\x20-\\x7E\\r\\n\\t]+");
     private static final Pattern TABLE = Pattern.compile("(?i)\\b(?:FROM|UPDATE|JOIN)\\s+\"?([A-Za-z][A-Za-z0-9_]*)\"?");
 
-    @Override public String path() { return "/api/admin/sql"; }
+    @Override public String path() { return "/admin/sql"; }
 
     @Override public HttpMethod method() { return HttpMethod.POST; }
 
