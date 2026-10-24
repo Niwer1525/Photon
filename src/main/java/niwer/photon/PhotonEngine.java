@@ -54,7 +54,9 @@ public class PhotonEngine {
             .addProcessor((data, time, formattedMessage) -> {
                 if (BotEngine.isBotInitialized())
                     BotEngine.log(data); // Print the log to the discord channel if the bot is initialized
-            }).setSaveFolder(Directories.LOGS_DIR, "network");
+            }).setSaveFolder(Directories.LOGS_DIR, "network")
+            .teeStandardStreams()
+            ;
 
     /**
      * Get the current IP of the user using the Amazon AWS service
