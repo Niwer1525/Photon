@@ -1,7 +1,6 @@
 # Photon
 
-Photon is a network application for Niwer's stuff such as the engine/framework, official content-packs & Armo.
-It also provide the official discord bot, database for anti-cheat reports, crash-reports, accounts & much more.
+Photon is the backend software for Niwer's stuff such as the engine/framework, official content-packs, Armo, Blog, official Discord bot, database for anti-cheat reports, crash-reports, accounts & much more.
 
 ## Run
 
@@ -18,8 +17,7 @@ services:
     volumes:
       - ./app_data:/photon_server/network/
 ```
-If errors occur, check the logs but it may be due to JNA not being able to load the native library.
-You can try to run the jar with the following flags to disable JNA unpacking and use a temporary directory for the native library:
+If errors occur, check the logs but it may be due to JNA not being able to load the native library. To disable JNA unpacking and use a temporary directory for the native library:
 ```bash	
 java -jar YOUR_JAR_FILE -Djna.nosys=true -Djna.nounpack=true -Djna.tmpdir=/tmp
 ```
@@ -28,6 +26,20 @@ java -jar YOUR_JAR_FILE -Djna.nosys=true -Djna.nounpack=true -Djna.tmpdir=/tmp
 
 Photon is configured via a JSON file : `network/config.json`, which contains settings for the network, database, Stripe integration and more.
 
+- **General settings**
+	- `isDevEnv` controls whether the server is running in development mode.
+
+- **Discord Bot**
+	- `bot_activity` controls the bot's activity status.
+	- `discord_bot_token` is the bot token used to connect to Discord.
+	- `discord_bot_id` is the bot's user ID, used for certain operations.
+	- `official_discord_server_id` is the ID of the official Discord server, used for certain operations.
+	- `network_console_channel_id` is the ID of the Discord channel where network console logs are sent.
+
+- **Web Server**
+	- `webserver_port` controls the port on which the web server listens.
+	- `webserver_host` controls the host address for the web server.
+
 - **Database backups**
 	- `database_backup_enabled` controls whether the backup system runs at all.
 	- `database_backup_on_startup` controls whether a backup is created during startup.
@@ -35,13 +47,38 @@ Photon is configured via a JSON file : `network/config.json`, which contains set
 	- `database_backup_directory` controls where backup files are written.
 	- `database_backup_file_prefix` controls the generated backup filename prefix.
 
-- **Stripe (Checkout & webhooks)**
-	- In `network/config.json` set `stripe_webhook_signature` to the private signature key from your Stripe dashboard (not the public API key). This is used to verify incoming webhook events from Stripe.
-	- Set `stripe_api_key` in `network/config.json` to enable Stripe checkout session creation.
-
 - **Licenses**
-	- `products` is a list of products available when creating a license. Each entry contains an `id`, display `name`, optional `default_license_duration_days`, and Stripe `stripe_price_ids`.
-	- Photon retrieves Checkout Session line items from Stripe and matches their Price ID against `stripe_price_ids`.
+	- `products` is a list of products available when creating a license. Each entry contains an `id`, display `name`, optional `default_license_duration_days`, and Stripe `stripe_price_ids`. Photon retrieves Checkout Session line items from Stripe and matches their Price ID against `stripe_price_ids`.
+	**Product**
+		- `id` is the unique identifier for the product.
+		- `name` is the display name for the product.
+		- `discord_role_id` is the Discord role ID to assign to users who purchase this product.
+		- `is_license_required` indicates if the user have to generate license keys to use the product.
+		- `default_license_duration_days` is the default duration for licenses of this product (in days).
+		- `stripe_price_ids` is a list of Stripe Price IDs associated with this product. Photon uses these IDs to match against Stripe Checkout Session line items.
+		- `is_subscription` indicates if the product is a subscription (recurring) or a one-time purchase.
+		- `repo_owner` is the GitHub repository owner for this product's assets.
+		- `repo_name` is the GitHub repository name for this product's assets.
+		- `excluded_release_tags` is a list of release tags to exclude when fetching assets from GitHub. Photon will ignore releases with these tags when listing available assets for this product.
+
+- **Github**
+	- `github_pat` is the personal access token used to access GitHub API for accessing private repositories and assets.
+	- `github_template_repo` is the repository used as a template for new repositories created by Photon.
+
+- **Mail**
+	- `mail_smtp_host` is the SMTP server host for sending emails.
+	- `mail_smtp_port` is the SMTP server port for sending emails.
+	- `mail_smtp_username` is the username for authenticating with the SMTP server.
+	- `mail_smtp_password` is the password for authenticating with the SMTP server.
+	- `mail_sender_email` is the email address used as the sender for outgoing emails.
+
+- **Stripe (Checkout & webhooks)**
+	- `stripe_webhook_signature` the private signature key from Stripe dashboard (not the public API key. This is used to verify incoming webhook events from Stripe.
+	- `stripe_api_key` enables Stripe checkout session creation.
+
+- **Accounts**
+	- `account_retention_days` controls how long deleted accounts are retained before permanent deletion.
+	- `totp_issuer` is the issuer name used for TOTP (Time-based One-Time Password) generation.
 
 ## Endpoints
 

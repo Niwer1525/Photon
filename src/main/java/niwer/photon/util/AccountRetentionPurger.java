@@ -28,7 +28,7 @@ public class AccountRetentionPurger implements Runnable {
 
     @Override
     public void run() {
-        long cutoffTimestamp = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(Directories.getConfig().account_retention_days);
+        long cutoffTimestamp = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(Directories.config().account_retention_days);
 
         // Fetch accounts where deletedAt <= (NOW - RETENTION_DAYS)
         List<ObjectUserAccount> expiredAccounts = SelectionManager.select(PhotonEngine.DATA_BASE, PlayerAccountTable.class)

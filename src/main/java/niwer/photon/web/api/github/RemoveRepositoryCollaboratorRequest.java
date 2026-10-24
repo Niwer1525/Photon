@@ -21,7 +21,7 @@ public class RemoveRepositoryCollaboratorRequest extends GithubApiRequest<Void> 
 
     public RemoveRepositoryCollaboratorRequest(String githubUsername) {
         this.githubUsername = githubUsername;
-        this.repositoryName = Directories.getConfig().github_template_repo + "-" + this.sanitizeAndLower(githubUsername);
+        this.repositoryName = Directories.config().github_template_repo + "-" + this.sanitizeAndLower(githubUsername);
     }
 
     public RemoveRepositoryCollaboratorRequest(String repositoryName, String githubUsername) {
@@ -31,7 +31,7 @@ public class RemoveRepositoryCollaboratorRequest extends GithubApiRequest<Void> 
 
     @Override
     public String url() {
-        return String.format("https://api.github.com/repos/%s/%s/collaborators/%s", Directories.getConfig().github_new_repo_owner, this.repositoryName, this.githubUsername);
+        return String.format("https://api.github.com/repos/%s/%s/collaborators/%s", Directories.config().github_new_repo_owner, this.repositoryName, this.githubUsername);
     }
 
     @Override

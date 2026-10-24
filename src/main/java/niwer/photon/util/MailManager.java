@@ -31,20 +31,20 @@ public class MailManager {
         if(mailer != null) return mailer; // Return the existing mailer if it has already been initialized
 
         /* If the mailer is not initialized, create a new one */
-        if(!Directories.getConfig().hasEmailConfig()) throw new IllegalStateException("Mail configuration is not set. Please check the configuration file.");
+        if(!Directories.config().hasEmailConfig()) throw new IllegalStateException("Mail configuration is not set. Please check the configuration file.");
 
         return mailer = MailerBuilder.withSMTPServer(
-            Directories.getConfig().mail_smtp_host,
-            Directories.getConfig().mail_smtp_port,
-            Directories.getConfig().mail_username,
-            Directories.getConfig().mail_password)
+            Directories.config().mail_smtp_host,
+            Directories.config().mail_smtp_port,
+            Directories.config().mail_username,
+            Directories.config().mail_password)
         .withTransportStrategy(TransportStrategy.SMTP_TLS)
         .async()
         .buildMailer();
     }
 
     public static void sendContactMessage(String senderName, Language lang, String visitorEmail, String message) {
-        if(!Directories.getConfig().hasEmailConfig()) throw new IllegalStateException("Mail configuration is not set.");
+        if(!Directories.config().hasEmailConfig()) throw new IllegalStateException("Mail configuration is not set.");
         if (visitorEmail == null || visitorEmail.isBlank()) throw new IllegalArgumentException("Visitor email cannot be null or blank.");
         if (message == null || message.isBlank()) throw new IllegalArgumentException("Message body cannot be null or blank.");
 
@@ -52,7 +52,7 @@ public class MailManager {
         String body = "Name : " + displayName + "\nEmail : " + visitorEmail + "\n\nMessage :\n" + message;
 
         final Email email = EmailBuilder.startingBlank()
-            .from("Contact Form", Directories.getConfig().mail_sender_email)
+            .from("Contact Form", Directories.config().mail_sender_email)
             // .to("Admin", Directories.getConfig().mail_sender_email)
             .withReplyTo(displayName, visitorEmail)
             .withSubject("New message from : " + displayName + " via Contact Form")
@@ -71,7 +71,7 @@ public class MailManager {
      * @param body The body of the email.
      */
     public static void sendEmail(String recipientEmail, RecipientType type, String subject, String body) {
-        if(!Directories.getConfig().hasEmailConfig()) throw new IllegalStateException("Mail configuration is not set. Please check the configuration file.");
+        if(!Directories.config().hasEmailConfig()) throw new IllegalStateException("Mail configuration is not set. Please check the configuration file.");
         if(body == null || body.isBlank()) throw new IllegalArgumentException("Email body cannot be null or blank.");
 
         /* Create the email */
@@ -90,7 +90,7 @@ public class MailManager {
      * @param htmlBody The HTML body of the email.
      */
     public static void sendHtmlEmail(String recipientEmail, RecipientType type, String subject, String htmlBody) {
-        if(!Directories.getConfig().hasEmailConfig()) throw new IllegalStateException("Mail configuration is not set. Please check the configuration file.");
+        if(!Directories.config().hasEmailConfig()) throw new IllegalStateException("Mail configuration is not set. Please check the configuration file.");
         if(htmlBody == null || htmlBody.isBlank()) throw new IllegalArgumentException("Email HTML body cannot be null or blank.");
 
         /* Create the email */
@@ -109,7 +109,7 @@ public class MailManager {
      * @param htmlFileName The path to the HTML file containing the email content.
      */
     public static void sendHtmlFileEmail(String recipientEmail, RecipientType type, String subject, String htmlFileName) {
-        if(!Directories.getConfig().hasEmailConfig()) throw new IllegalStateException("Mail configuration is not set. Please check the configuration file.");
+        if(!Directories.config().hasEmailConfig()) throw new IllegalStateException("Mail configuration is not set. Please check the configuration file.");
         if(htmlFileName == null || htmlFileName.isBlank()) throw new IllegalArgumentException("Email HTML file cannot be null or blank.");
 
         try(InputStream STREAM = OperatingSystem.loadFile("mail/" + htmlFileName)) {
@@ -133,7 +133,7 @@ public class MailManager {
         if(type == null) throw new IllegalArgumentException("Recipient type cannot be null.");
         if(subject == null || subject.isBlank()) throw new IllegalArgumentException("Email subject cannot be null or blank.");
 
-        return EmailBuilder.startingBlank().from("Sender", Directories.getConfig().mail_sender_email).withRecipients(forRecipient(recipientEmail, type)).withSubject(subject);
+        return EmailBuilder.startingBlank().from("Sender", Directories.config().mail_sender_email).withRecipients(forRecipient(recipientEmail, type)).withSubject(subject);
     }
 
     /**

@@ -1,4 +1,4 @@
-package niwer.photon.web.endpoints.accounts;
+package niwer.photon.web.endpoints.accounts.totp;
 
 import java.util.concurrent.TimeUnit;
 
@@ -8,6 +8,7 @@ import niwer.photon.util.session.SessionManager;
 import niwer.photon.web.HttpMethod;
 import niwer.photon.web.endpoints.EndpointUtils;
 import niwer.photon.web.endpoints.IEndpoint;
+import niwer.photon.web.endpoints.accounts.AuthAccountEndpoint;
 
 public class AuthAccount2FAEndpoint implements IEndpoint {
 

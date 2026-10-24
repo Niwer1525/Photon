@@ -16,7 +16,7 @@ import niwer.photon.web.HttpMethod;
 public class RemoveTeamMemberRequest extends GithubApiRequest<Void> {
 
     private final transient String githubUsername;
-    private final transient String TEAM_SLUG = Directories.getConfig().github_customer_team;
+    private final transient String TEAM_SLUG = Directories.config().github_customer_team;
 
     public RemoveTeamMemberRequest(String githubUsername) {
         this.githubUsername = githubUsername;
@@ -24,7 +24,7 @@ public class RemoveTeamMemberRequest extends GithubApiRequest<Void> {
 
     @Override
     public String url() {
-        return String.format("https://api.github.com/orgs/%s/teams/%s/memberships/%s", Directories.getConfig().github_new_repo_owner, TEAM_SLUG, this.githubUsername);
+        return String.format("https://api.github.com/orgs/%s/teams/%s/memberships/%s", Directories.config().github_new_repo_owner, TEAM_SLUG, this.githubUsername);
     }
 
     @Override

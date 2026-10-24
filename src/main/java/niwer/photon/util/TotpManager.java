@@ -32,7 +32,7 @@ public class TotpManager {
     private static final String AES_ALGO = "AES/GCM/NoPadding";
     private static final int TAG_LENGTH_BITS = 128;
     private static final int IV_LENGTH = 12;
-    private static final SecretKey SECRET_KEY = new SecretKeySpec(Directories.getConfig().getTotpSecretBytes(), "AES");
+    private static final SecretKey SECRET_KEY = new SecretKeySpec(Directories.config().getTotpSecretBytes(), "AES");
     private static final DefaultCodeVerifier VERIFIER = new DefaultCodeVerifier(
         new DefaultCodeGenerator(HashingAlgorithm.SHA1),
         new SystemTimeProvider()
@@ -95,7 +95,7 @@ public class TotpManager {
         QrData data = new QrData.Builder()
             .label(email)
             .secret(rawSecret)
-            .issuer(Directories.getConfig().getTotpIssuer())
+            .issuer(Directories.config().getTotpIssuer())
             .algorithm(HashingAlgorithm.SHA1)
             .digits(6)
             .period(30)

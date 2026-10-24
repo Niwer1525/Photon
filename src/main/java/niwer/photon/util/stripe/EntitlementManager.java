@@ -62,7 +62,7 @@ public final class EntitlementManager {
             .toList();
 
         final List<Map<String, Object>> PURCHASES = PurchaseTable.getByAccountUuid(accountUuid).stream()
-            .filter(p -> Directories.getConfig().isOneTimeProduct(p))
+            .filter(p -> Directories.config().isOneTimeProduct(p))
             .map(item -> entitlementRecord(item.productId(), item.status(), null, item.createdAt() == null ? null : item.createdAt().getTime()))
             .map(item -> entitlement(item, "ONE_TIME"))
             .toList();

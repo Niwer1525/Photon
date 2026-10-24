@@ -32,7 +32,7 @@ public class AccountLicenseProductsEndpoint implements IEndpoint {
             }
             
             /* Get the products to which the user has access */
-            final List<Map<String, Object>> PRODUCTS = Directories.getConfig().getProducts().stream()
+            final List<Map<String, Object>> PRODUCTS = Directories.config().getProducts().stream()
                 .filter(product -> product.isLicenseRequired() && (ACCOUNT.isAdministrator() || EntitlementManager.hasAccess(ACCOUNT.getUuid(), product.id())))
                 .map(product -> product.payload())
                 .toList();

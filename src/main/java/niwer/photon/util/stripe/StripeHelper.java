@@ -39,7 +39,7 @@ public final class StripeHelper {
     public static String resolveProductId(Price price) {
         if (price == null) return null;
         
-        final var PRODUCT = Directories.getConfig().productByStripePriceId(price.getId());
+        final var PRODUCT = Directories.config().productByStripePriceId(price.getId());
         return PRODUCT != null ? PRODUCT.id() : null;
     }
 

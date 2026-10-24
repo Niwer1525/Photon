@@ -27,7 +27,7 @@ public class StripeWebhookEndpoint implements IEndpoint {
 
     @Override
     public void handle(Context ctx) {
-        final String API_KEY = Directories.getConfig().stripe_api_key;
+        final String API_KEY = Directories.config().stripe_api_key;
         if (API_KEY == null || API_KEY.isBlank()) {
             ctx.status(500).result("stripe_api_key is not configured");
             return;
@@ -36,7 +36,7 @@ public class StripeWebhookEndpoint implements IEndpoint {
 
         final Event EVENT;
         try {
-            final String WEBHOOK_SECRET = Directories.getConfig().stripe_webhook_signature;
+            final String WEBHOOK_SECRET = Directories.config().stripe_webhook_signature;
             final String SIG_HEADER = ctx.header("Stripe-Signature");
             EVENT = (WEBHOOK_SECRET != null && !WEBHOOK_SECRET.isBlank()) ? Webhook.constructEvent(ctx.body(), SIG_HEADER, WEBHOOK_SECRET) : Event.GSON.fromJson(ctx.body(), Event.class);
         } catch (SignatureVerificationException e) {

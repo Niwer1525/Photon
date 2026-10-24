@@ -32,7 +32,7 @@ public class SetAdminCommand extends AbstractSlashCommand {
         }
 
         /* Check if the user is in the correct channel */
-        if(event.getChannel().getIdLong() != Long.parseLong(Directories.getConfig().network_console_channel_id)) {
+        if(event.getChannel().getIdLong() != Long.parseLong(Directories.config().network_console_channel_id)) {
             event.reply("This command can only be used in the network console channel.").setEphemeral(true).queue();
             return;
         }

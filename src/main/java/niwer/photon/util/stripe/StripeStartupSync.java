@@ -18,7 +18,7 @@ public final class StripeStartupSync {
     private StripeStartupSync() {}
 
     public static void load() {
-        final String API_KEY = Directories.getConfig().stripe_api_key;
+        final String API_KEY = Directories.config().stripe_api_key;
         if (API_KEY == null || API_KEY.isBlank()) {
             Console.log("Stripe startup sync aborted: stripe_api_key missing").type(PhotonLogTypes.STRIPE).error().container(PhotonEngine.LOGGER).send();
             return;

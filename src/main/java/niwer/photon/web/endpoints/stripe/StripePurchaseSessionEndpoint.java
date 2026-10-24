@@ -38,7 +38,7 @@ public class StripePurchaseSessionEndpoint implements IEndpoint {
                 return;
             }
     
-            final String API_KEY = Directories.getConfig().stripe_api_key;
+            final String API_KEY = Directories.config().stripe_api_key;
             if (API_KEY == null || API_KEY.isBlank()) {
                 handler.status(500).result("stripe_api_key is not configured");
                 return;

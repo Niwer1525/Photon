@@ -35,7 +35,7 @@ public class GetProductLatestVersionEndpoint implements IEndpoint {
                 return;
             }
     
-            final ObjectProduct PRODUCT = Directories.getConfig().getProducts().stream()
+            final ObjectProduct PRODUCT = Directories.config().getProducts().stream()
                 .filter(product -> PRODUCT_ID.equals(product.id()) || (product.hasRepo() && PRODUCT_ID.equals(product.repoKey())))
                 .findFirst().orElse(null);
             final var REPO = PRODUCT.repoName();

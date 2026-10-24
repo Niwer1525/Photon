@@ -77,7 +77,7 @@ public class GetAssetsEndpoint implements IEndpoint {
                 if (cachedData != null && (NOW - lastCacheUpdate) < CACHE_TTL_MILLIS) return cachedData;
 
                 /* Filter products having a repo */
-                final List<ObjectProduct> PRODUCTS = Directories.getConfig().getProducts().stream().parallel().filter(ObjectProduct::hasRepo).toList();
+                final List<ObjectProduct> PRODUCTS = Directories.config().getProducts().stream().parallel().filter(ObjectProduct::hasRepo).toList();
 
                 /* Futures */
                 final List<CompletableFuture<Map.Entry<String, ReleaseResult>>> FUTURES = PRODUCTS.stream().map(this::fetchProductAssetsAsync).toList();

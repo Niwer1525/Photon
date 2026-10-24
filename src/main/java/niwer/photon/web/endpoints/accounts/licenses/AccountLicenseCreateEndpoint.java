@@ -35,7 +35,7 @@ public class AccountLicenseCreateEndpoint implements IEndpoint {
     
             final JsonObject BODY = EndpointUtils.readBody(handler);
             final String REQUESTED_PRODUCT_ID = GsonUtils.getString(BODY, "product_id", "productId", null);
-            final var PRODUCTS = Directories.getConfig().getProducts();
+            final var PRODUCTS = Directories.config().getProducts();
             final var PRODUCT = PRODUCTS.stream()
                 .filter(candidate -> Objects.equals(candidate.id(), REQUESTED_PRODUCT_ID) || (REQUESTED_PRODUCT_ID == null && candidate == PRODUCTS.get(0)))
                 .findFirst()

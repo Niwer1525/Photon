@@ -54,14 +54,14 @@ public class BotEngine extends ListenerAdapter {
      */
     public static void load(boolean shouldRestart) {
         Thread t = new Thread(() -> {
-            if(!Directories.getConfig().hasBotToken()) throw new IllegalStateException("Discord bot token is not set. Please check the configuration file.");
+            if(!Directories.config().hasBotToken()) throw new IllegalStateException("Discord bot token is not set. Please check the configuration file.");
 
             try {
                 /* Try to silence JDA logs */
                 PhotonLogTypes.silenceLogsFor("net.dv8tion.jda");
                 
-                final JDABuilder BUILDER = JDABuilder.createDefault(Directories.getConfig().discord_bot_token);
-                BUILDER.setActivity(Activity.playing(Directories.getConfig().bot_activity));
+                final JDABuilder BUILDER = JDABuilder.createDefault(Directories.config().discord_bot_token);
+                BUILDER.setActivity(Activity.playing(Directories.config().bot_activity));
                 BUILDER.addEventListeners(new BotEngine());
                 BUILDER.addEventListeners(new CommandsManager());
                 BUILDER.enableIntents(GatewayIntent.MESSAGE_CONTENT);
@@ -105,7 +105,7 @@ public class BotEngine extends ListenerAdapter {
         guild = event.getGuild();
         guild.updateCommands().addCommands(CommandsManager.getGuildCommands()).queue();
         if (isRestarting) {
-            guild.getTextChannelById(Directories.getConfig().network_console_channel_id).sendMessage("Network restarted").queue();
+            guild.getTextChannelById(Directories.config().network_console_channel_id).sendMessage("Network restarted").queue();
             isRestarting = false;
         }
     }
@@ -172,7 +172,7 @@ public class BotEngine extends ListenerAdapter {
 
         final EmbedBuilder LOGS_EMBED = new EmbedBuilder();
         LOGS_EMBED.setColor(data.type().color().color());
-        LOGS_EMBED.setTitle((data.isError() ? "[Error] " : "") + data.type().name() + (Directories.getConfig().isDevEnvironment() ? " [DEV]" : ""));
+        LOGS_EMBED.setTitle((data.isError() ? "[Error] " : "") + data.type().name() + (Directories.config().isDevEnvironment() ? " [DEV]" : ""));
         LOGS_EMBED.setDescription(String.format("%s", data.message()));
         LOGS_EMBED.setTimestamp(OffsetDateTime.now());
         getConsoleChannel().sendMessageEmbeds(LOGS_EMBED.build()).queue();
@@ -185,7 +185,7 @@ public class BotEngine extends ListenerAdapter {
 
     public static boolean isOfficialGuild(Guild guildToCheck) {
         if(guildToCheck == null) return false;
-        return guildToCheck.getId().equals(Directories.getConfig().official_discord_server_id);
+        return guildToCheck.getId().equals(Directories.config().official_discord_server_id);
     }
 
     public static boolean hasConsoleChannel() { return getConsoleChannel() != null; }
@@ -201,8 +201,8 @@ public class BotEngine extends ListenerAdapter {
      */
     public static StandardGuildMessageChannel getConsoleChannel() {
         if(guild == null) return null;
-        if(Directories.getConfig().network_console_channel_id == null || Directories.getConfig().network_console_channel_id.isEmpty()) return null;
-        return guild.getTextChannelById(Directories.getConfig().network_console_channel_id);
+        if(Directories.config().network_console_channel_id == null || Directories.config().network_console_channel_id.isEmpty()) return null;
+        return guild.getTextChannelById(Directories.config().network_console_channel_id);
     }
 
     @Override

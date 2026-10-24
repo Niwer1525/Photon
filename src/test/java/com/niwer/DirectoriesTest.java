@@ -20,7 +20,7 @@ public class DirectoriesTest {
     @Test
     public void testGetConfig() {
         Directories.load();
-        assertTrue(Directories.getConfig() != null);
+        assertTrue(Directories.config() != null);
     }
 
     @Test

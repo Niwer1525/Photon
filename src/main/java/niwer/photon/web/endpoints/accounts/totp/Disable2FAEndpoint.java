@@ -1,4 +1,4 @@
-package niwer.photon.web.endpoints.accounts;
+package niwer.photon.web.endpoints.accounts.totp;
 
 import java.util.concurrent.TimeUnit;
 

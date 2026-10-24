@@ -41,7 +41,7 @@ public class DownloadAssetService extends GithubApiRequest<InputStream> {
 
     @Override
     public void addHeaders(Builder builder) {
-        builder.header("Authorization", "Bearer " + Directories.getConfig().github_pat)
+        builder.header("Authorization", "Bearer " + Directories.config().github_pat)
             .header("Accept", "application/octet-stream")
             .header("X-GitHub-Api-Version", "2026-03-10")
             .header("Content-Type", "application/json");

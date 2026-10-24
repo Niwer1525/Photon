@@ -21,7 +21,7 @@ public class AddTeamMemberRequest extends GithubApiRequest<Void> {
     private final String role; // "member" or "maintainer"
 
     private final transient String githubUsername;
-    private final transient String TEAM_SLUG = Directories.getConfig().github_customer_team; // The slug of the team to which the user will be added
+    private final transient String TEAM_SLUG = Directories.config().github_customer_team; // The slug of the team to which the user will be added
 
     public AddTeamMemberRequest(String githubUsername) {
         this(githubUsername, "member");
@@ -34,7 +34,7 @@ public class AddTeamMemberRequest extends GithubApiRequest<Void> {
 
     @Override
     public String url() {
-        return String.format("https://api.github.com/orgs/%s/teams/%s/memberships/%s", Directories.getConfig().github_new_repo_owner, TEAM_SLUG, this.githubUsername);
+        return String.format("https://api.github.com/orgs/%s/teams/%s/memberships/%s", Directories.config().github_new_repo_owner, TEAM_SLUG, this.githubUsername);
     }
 
     @Override

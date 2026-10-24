@@ -1,4 +1,4 @@
-package niwer.photon.web.endpoints.accounts;
+package niwer.photon.web.endpoints.accounts.totp;
 
 import java.util.List;
 import java.util.Map;

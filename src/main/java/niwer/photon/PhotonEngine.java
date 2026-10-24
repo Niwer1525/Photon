@@ -18,6 +18,7 @@ import niwer.lumen.LumenEngine;
 import niwer.lumen.container.Container;
 import niwer.photon.discord.BotEngine;
 import niwer.photon.sql.AnticheatTable;
+import niwer.photon.sql.BlogPostsTable;
 import niwer.photon.sql.CrashReportTable;
 import niwer.photon.sql.DiscordLogTable;
 import niwer.photon.sql.HWIDTable;
@@ -54,7 +55,7 @@ public class PhotonEngine {
             .addProcessor((data, time, formattedMessage) -> {
                 if (BotEngine.isBotInitialized())
                     BotEngine.log(data); // Print the log to the discord channel if the bot is initialized
-            }).setSaveFolder(Directories.LOGS_DIR, "network")
+            }).setSaveFolder(Directories.LOGS_DIR, "photon")
             .teeStandardStreams()
             ;
 
@@ -135,35 +136,42 @@ public class PhotonEngine {
         /* Register tables to the Data Base */
         DATA_BASE
                 /* Security */
-                .registerTable(HWIDTable.class)
-                .registerTable(LicenseTable.class)
-                .registerTable(PurchaseTable.class)
-                .registerTable(SubscriptionTable.class)
                 .registerTable(AnticheatTable.class)
                 .registerTable(CrashReportTable.class)
+
+                /* Admin */
+                .registerTable(HWIDTable.class)
                 .registerTable(DiscordLogTable.class)
+
+                /* Blog Posts */
+                .registerTable(BlogPostsTable.class)
 
                 /* User Accounts */
                 .registerTable(PlayerAccountTable.class)
                 .registerTable(RecoveryCodesTable.class)
+
+                /* Purchases */
+                .registerTable(LicenseTable.class)
+                .registerTable(PurchaseTable.class)
+                .registerTable(SubscriptionTable.class)
 
                 /* Servers */
                 .registerTable(ServerTable.class);
         DATA_BASE.setPrunePolicy(SchemaPrunePolicy.PRUNE_ALL);
 
         /* Run the database backup system */
-        if (Directories.getConfig().database_backup_enabled) {
+        if (Directories.config().database_backup_enabled) {
             if (!Directories.BACKUPS_DIR.exists())
                 Directories.BACKUPS_DIR.mkdirs(); // Ensure that the backups directory exists
 
             /* Create a backup manager with a scheduler */
             backupManager = DatabaseBackupManager.createWithScheduler(DATA_BASE, Directories.BACKUPS_DIR,
-                    Directories.getConfig().dbBackupFilePrefix(),
-                    (int) Directories.getConfig().database_backup_retention_days,
-                    Directories.getConfig().database_backup_interval_minutes);
+                    Directories.config().dbBackupFilePrefix(),
+                    (int) Directories.config().database_backup_retention_days,
+                    Directories.config().database_backup_interval_minutes);
 
             /* Create a backup on startup if enabled */
-            if (Directories.getConfig().database_backup_on_startup)
+            if (Directories.config().database_backup_on_startup)
                 backupManager.createBackup("startup-backup");
         }
 

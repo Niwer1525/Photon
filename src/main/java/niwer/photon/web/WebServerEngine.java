@@ -13,22 +13,22 @@ import niwer.photon.web.endpoints.HomeEndpoint;
 import niwer.photon.web.endpoints.IEndpoint;
 import niwer.photon.web.endpoints.LicenseValidateEndpoint;
 import niwer.photon.web.endpoints.accounts.AccountEntitlementsEndpoint;
-import niwer.photon.web.endpoints.accounts.AuthAccount2FAEndpoint;
 import niwer.photon.web.endpoints.accounts.AuthAccountEndpoint;
 import niwer.photon.web.endpoints.accounts.ChangePasswordEndpoint;
-import niwer.photon.web.endpoints.accounts.Confirm2FAEndpoint;
 import niwer.photon.web.endpoints.accounts.CreateAccountEndpoint;
 import niwer.photon.web.endpoints.accounts.DeleteAccountEndpoint;
-import niwer.photon.web.endpoints.accounts.Disable2FAEndpoint;
 import niwer.photon.web.endpoints.accounts.LogoutEndpoint;
 import niwer.photon.web.endpoints.accounts.MeEndpoint;
 import niwer.photon.web.endpoints.accounts.RefreshSessionEndpoint;
-import niwer.photon.web.endpoints.accounts.Setup2FAEndpoint;
 import niwer.photon.web.endpoints.accounts.UpdateAccountSettingsEndpoint;
 import niwer.photon.web.endpoints.accounts.licenses.AccountLicenseCreateEndpoint;
 import niwer.photon.web.endpoints.accounts.licenses.AccountLicenseListEndpoint;
 import niwer.photon.web.endpoints.accounts.licenses.AccountLicenseProductsEndpoint;
 import niwer.photon.web.endpoints.accounts.licenses.AccountLicenseRevokeEndpoint;
+import niwer.photon.web.endpoints.accounts.totp.AuthAccount2FAEndpoint;
+import niwer.photon.web.endpoints.accounts.totp.Confirm2FAEndpoint;
+import niwer.photon.web.endpoints.accounts.totp.Disable2FAEndpoint;
+import niwer.photon.web.endpoints.accounts.totp.Setup2FAEndpoint;
 import niwer.photon.web.endpoints.admin.AdminSqlEndpoint;
 import niwer.photon.web.endpoints.admin.AdminTableDataEndpoint;
 import niwer.photon.web.endpoints.admin.AdminTablesEndpoint;
@@ -125,15 +125,15 @@ public class WebServerEngine {
                 }
 
                 /* Force Configure Jetty */
-                cfg.jetty.host = Directories.getConfig().webserver_host;
-                cfg.jetty.port = Directories.getConfig().webserver_port;
+                cfg.jetty.host = Directories.config().webserver_host;
+                cfg.jetty.port = Directories.config().webserver_port;
                 cfg.jetty.modifyHttpConfiguration(httpConfig -> httpConfig.addCustomizer(new ForwardedRequestCustomizer()));
             });
 
             /* Start the web server */
-            WEB_SERVER.start(Directories.getConfig().webserver_host, Directories.getConfig().webserver_port);
+            WEB_SERVER.start(Directories.config().webserver_host, Directories.config().webserver_port);
 
-            Console.log(getServingBox(Directories.getConfig().webserver_port)).container(PhotonEngine.LOGGER).type(PhotonLogTypes.WEB_SERVER).send();
+            Console.log(getServingBox(Directories.config().webserver_port)).container(PhotonEngine.LOGGER).type(PhotonLogTypes.WEB_SERVER).send();
         }, "Web Server Thread");
         thread.start();
     }
