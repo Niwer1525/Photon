@@ -3,6 +3,7 @@ package niwer.photon.web.endpoints.servers;
 import java.util.concurrent.TimeUnit;
 
 import io.javalin.http.Context;
+import io.javalin.http.HttpStatus;
 import niwer.lumen.Console;
 import niwer.photon.PhotonEngine;
 import niwer.photon.objects.ObjectServer;
@@ -29,25 +30,25 @@ public class AddServerEndpoint implements IEndpoint {
         try {
             final ObjectServer server = ObjectServer.fromPayload(handler.body());
             if(server == null) {
-                handler.status(400).result("Invalid server payload");
+                handler.status(HttpStatus.BAD_REQUEST).result("Invalid server payload");
                 return;
             }
     
             // final String remoteIp = handler.ip();
             // if (server.serverIP == null || server.serverIP.isBlank() ||
             // !server.serverIP.equals(remoteIp)) {
-            // handler.status(403).result(String.format("Server IP mismatch (Sender: %s
+            // handler.status(HttpStatus.FORBIDDEN).result(String.format("Server IP mismatch (Sender: %s
             // isn't equal to server: %s)", handler.ip(), server.serverIP));
             // return;
             // }
     
             if (server.serverPort <= 0 || server.serverPort > 65535) {
-                handler.status(400).result("Invalid server port");
+                handler.status(HttpStatus.BAD_REQUEST).result("Invalid server port");
                 return;
             }
     
             if (server.serverName == null || server.serverName.isBlank()) {
-                handler.status(400).result("Server name is required");
+                handler.status(HttpStatus.BAD_REQUEST).result("Server name is required");
                 return;
             }
     
@@ -56,7 +57,7 @@ public class AddServerEndpoint implements IEndpoint {
             if (server.serverMOTD != null && server.serverMOTD.length() > 2048) server.serverMOTD = server.serverMOTD.substring(0, 2048);
     
             ServerTable.saveOrUpdate(server);
-            handler.status(200).result("Server added/updated successfully");
+            handler.status(HttpStatus.OK).result("Server added/updated successfully");
             Console.log("Server %s:%d (%s) has been added/updated in the database", server.serverIP, server.serverPort, server.serverName).container(PhotonEngine.LOGGER).type(PhotonLogTypes.WEB_SERVER).send();
         } catch (Exception e) {
             IEndpoint.handleException(AddServerEndpoint.class, handler, e);

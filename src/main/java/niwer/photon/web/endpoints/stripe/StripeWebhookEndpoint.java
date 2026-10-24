@@ -9,6 +9,7 @@ import com.stripe.model.checkout.Session;
 import com.stripe.net.Webhook;
 
 import io.javalin.http.Context;
+import io.javalin.http.HttpStatus;
 import niwer.lumen.Console;
 import niwer.photon.Directories;
 import niwer.photon.PhotonEngine;
@@ -30,7 +31,7 @@ public class StripeWebhookEndpoint implements IEndpoint {
     public void handle(Context ctx) {
         final String API_KEY = Directories.config().stripe_api_key;
         if (API_KEY == null || API_KEY.isBlank()) {
-            ctx.status(500).result("stripe_api_key is not configured");
+            ctx.status(HttpStatus.INTERNAL_SERVER_ERROR).result("stripe_api_key is not configured");
             return;
         }
         Stripe.apiKey = API_KEY;
@@ -42,16 +43,16 @@ public class StripeWebhookEndpoint implements IEndpoint {
             EVENT = (WEBHOOK_SECRET != null && !WEBHOOK_SECRET.isBlank()) ? Webhook.constructEvent(ctx.body(), SIG_HEADER, WEBHOOK_SECRET) : Event.GSON.fromJson(ctx.body(), Event.class);
         } catch (SignatureVerificationException e) {
             Console.log("Invalid signature: " + e.getMessage()).type(PhotonLogTypes.STRIPE).error().container(PhotonEngine.LOGGER).send();
-            ctx.status(400).result("Invalid signature");
+            ctx.status(HttpStatus.BAD_REQUEST).result("Invalid signature");
             return;
         } catch (Exception e) {
-            ctx.status(400).result("Invalid payload");
+            ctx.status(HttpStatus.BAD_REQUEST).result("Invalid payload");
             return;
         }
 
         final StripeObject STRIPE_OBJECT = EVENT.getDataObjectDeserializer().getObject().orElse(null);
         if (STRIPE_OBJECT == null) {
-            ctx.status(200).result("Ignored: schema mismatch");
+            ctx.status(HttpStatus.OK).result("Ignored: schema mismatch");
             return;
         }
 
@@ -63,10 +64,10 @@ public class StripeWebhookEndpoint implements IEndpoint {
                 // case "invoice.paid" -> 
                 default -> Console.log("Unhandled webhook event: " + EVENT.getType()).type(PhotonLogTypes.STRIPE).container(PhotonEngine.LOGGER).send();
             }
-            ctx.status(200).result("ok");
+            ctx.status(HttpStatus.OK).result("ok");
         } catch (Exception e) {
             Console.log("Error processing webhook " + EVENT.getType() + ": " + e.getMessage()).type(PhotonLogTypes.STRIPE).error().container(PhotonEngine.LOGGER).send();
-            ctx.status(500).result("Internal error");
+            ctx.status(HttpStatus.INTERNAL_SERVER_ERROR).result("Internal error");
         }
     }
 

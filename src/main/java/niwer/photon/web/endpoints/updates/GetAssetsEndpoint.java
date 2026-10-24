@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import com.google.gson.annotations.SerializedName;
 
 import io.javalin.http.Context;
+import io.javalin.http.HttpStatus;
 import niwer.photon.Directories;
 import niwer.photon.objects.ObjectGithubRelease;
 import niwer.photon.objects.ObjectGithubTag;
@@ -62,7 +63,7 @@ public class GetAssetsEndpoint implements IEndpoint {
                     ctx.json(cachedData);
                     return null;
                 }
-                ctx.status(500).json(Map.of("error", e.getMessage() != null ? e.getMessage() : "Unknown error"));
+                ctx.status(HttpStatus.INTERNAL_SERVER_ERROR).json(Map.of("error", e.getMessage() != null ? e.getMessage() : "Unknown error"));
                 return null;
             }));
         } catch (Exception e) {

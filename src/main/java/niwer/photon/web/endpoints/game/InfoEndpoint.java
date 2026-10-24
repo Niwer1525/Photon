@@ -3,6 +3,7 @@ package niwer.photon.web.endpoints.game;
 import java.util.concurrent.TimeUnit;
 
 import io.javalin.http.Context;
+import io.javalin.http.HttpStatus;
 import niwer.photon.Directories;
 import niwer.photon.PhotonConfig;
 import niwer.photon.web.HttpMethod;
@@ -20,7 +21,7 @@ public class InfoEndpoint implements IEndpoint {
         
         try {
             final PhotonConfig CONFIG = Directories.config();
-            handler.json(new Config(CONFIG));
+            handler.status(HttpStatus.OK).json(new Config(CONFIG));
         } catch (Exception e) {
             IEndpoint.handleException(InfoEndpoint.class, handler, e);
         }

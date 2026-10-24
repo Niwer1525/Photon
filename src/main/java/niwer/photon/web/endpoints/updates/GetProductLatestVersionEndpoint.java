@@ -4,6 +4,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import io.javalin.http.Context;
+import io.javalin.http.HttpStatus;
 import niwer.photon.Directories;
 import niwer.photon.objects.ObjectGithubRelease;
 import niwer.photon.objects.ObjectProduct;
@@ -31,7 +32,7 @@ public class GetProductLatestVersionEndpoint implements IEndpoint {
             /* Check if any repo was provided as query parameter */
             final var PRODUCT_ID = ctx.queryParam("product");
             if(PRODUCT_ID == null) {
-                ctx.status(400).result("Please provide a valid product ID.");
+                ctx.status(HttpStatus.BAD_REQUEST).result("Please provide a valid product ID.");
                 return;
             }
     
@@ -41,19 +42,19 @@ public class GetProductLatestVersionEndpoint implements IEndpoint {
             final var REPO = PRODUCT.repoName();
             final var OWNER = PRODUCT.repoOwner();
             if (REPO == null || OWNER == null) {
-                ctx.status(400).result("The requested product is not available.");
+                ctx.status(HttpStatus.BAD_REQUEST).result("The requested product is not available.");
                 return;
             }
     
             /* Get the latest version from GitHub tags */
             Optional<ObjectGithubRelease> request = new GetLatestReleaseRequest(PRODUCT).request();
             if(request.isEmpty()) {
-                ctx.status(404).result("No published releases found for the requested product.");
+                ctx.status(HttpStatus.NOT_FOUND).result("No published releases found for the requested product.");
                 return;
             }
     
             final var LATEST_RELEASE = request.get();
-            ctx.status(200).json(LATEST_RELEASE);
+            ctx.status(HttpStatus.OK).json(LATEST_RELEASE);
         } catch (Exception e) {
             IEndpoint.handleException(GetProductLatestVersionEndpoint.class, ctx, e);
         }

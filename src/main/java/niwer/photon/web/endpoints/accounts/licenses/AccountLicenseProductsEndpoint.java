@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import io.javalin.http.Context;
+import io.javalin.http.HttpStatus;
 import niwer.photon.Directories;
 import niwer.photon.util.session.SessionManager;
 import niwer.photon.util.stripe.EntitlementManager;
@@ -27,7 +28,7 @@ public class AccountLicenseProductsEndpoint implements IEndpoint {
             
             /* Check if the user has any access to the license system */
             if (!ACCOUNT.isAdministrator() && !EntitlementManager.hasAnyAccess(ACCOUNT.getUuid())) {
-                handler.status(403).result("Purchase or active subscription required");
+                handler.status(HttpStatus.FORBIDDEN).result("Purchase or active subscription required");
                 return;
             }
             
@@ -36,7 +37,7 @@ public class AccountLicenseProductsEndpoint implements IEndpoint {
                 .filter(product -> product.isLicenseRequired() && (ACCOUNT.isAdministrator() || EntitlementManager.hasAccess(ACCOUNT.getUuid(), product.id())))
                 .map(product -> product.payload())
                 .toList();
-            handler.status(200).json(PRODUCTS);
+            handler.status(HttpStatus.OK).json(PRODUCTS);
         } catch (Exception e) {
             IEndpoint.handleException(AccountLicenseProductsEndpoint.class, handler, e);
         }

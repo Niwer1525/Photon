@@ -3,6 +3,7 @@ package niwer.photon.web.endpoints.accounts;
 import java.util.concurrent.TimeUnit;
 
 import io.javalin.http.Context;
+import io.javalin.http.HttpStatus;
 import niwer.photon.objects.ObjectUserAccount;
 import niwer.photon.sql.PlayerAccountTable;
 import niwer.photon.util.GsonUtils;
@@ -30,41 +31,41 @@ public class UpdateAccountSettingsEndpoint implements IEndpoint {
         try {
             request = GsonUtils.GSON.fromJson(handler.body(), ProfileUpdateRequest.class);
         } catch (Exception exception) {
-            handler.status(400).result("Invalid profile payload");
+            handler.status(HttpStatus.BAD_REQUEST).result("Invalid profile payload");
             return;
         }
 
         if (request == null || request.uuid == null || request.currentPassword == null) {
-            handler.status(400).result("Missing parameters");
+            handler.status(HttpStatus.BAD_REQUEST).result("Missing parameters");
             return;
         }
 
         if (request.uuid.isBlank() || request.currentPassword.isBlank()) {
-            handler.status(400).result("Parameters cannot be blank");
+            handler.status(HttpStatus.BAD_REQUEST).result("Parameters cannot be blank");
             return;
         }
 
         final ObjectUserAccount account = PlayerAccountTable.getAccountByUUID(request.uuid);
         if (account == null) {
-            handler.status(404).result("Account not found");
+            handler.status(HttpStatus.NOT_FOUND).result("Account not found");
             return;
         }
 
         /* Enforce 2FA check if enabled */
         if (account.isTotpEnabled()) {
             if (request.code == null || request.code.isBlank()) {
-                handler.status(400).result("Two-factor authentication code is required");
+                handler.status(HttpStatus.BAD_REQUEST).result("Two-factor authentication code is required");
                 return;
             }
 
             if (!TotpManager.verifyCodeWithRecovery(account.getTotpSecret(), request.code.trim(), account.getUuid())) {
-                handler.status(401).result("Invalid 2FA code");
+                handler.status(HttpStatus.UNAUTHORIZED).result("Invalid 2FA code");
                 return;
             }
         }
 
         if (!HashUtils.passwordMatches(account.password(), request.currentPassword)) {
-            handler.status(401).result("Incorrect password");
+            handler.status(HttpStatus.UNAUTHORIZED).result("Incorrect password");
             return;
         }
 
@@ -73,14 +74,14 @@ public class UpdateAccountSettingsEndpoint implements IEndpoint {
         final String nextPassword = request.newPassword != null ? request.newPassword : null;
 
         if (nextUsername.isBlank() || nextEmail.isBlank()) {
-            handler.status(400).result("Username and email cannot be blank");
+            handler.status(HttpStatus.BAD_REQUEST).result("Username and email cannot be blank");
             return;
         }
 
         if (!nextUsername.equalsIgnoreCase(account.getUsername())) {
             final ObjectUserAccount existingUsername = PlayerAccountTable.getAccountByUsername(nextUsername);
             if (existingUsername != null && !existingUsername.getUuid().equals(account.getUuid())) {
-                handler.status(400).result("An account with this username already exists.");
+                handler.status(HttpStatus.BAD_REQUEST).result("An account with this username already exists.");
                 return;
             }
             PlayerAccountTable.setUsername(account.getUuid(), nextUsername);
@@ -89,7 +90,7 @@ public class UpdateAccountSettingsEndpoint implements IEndpoint {
         if (!nextEmail.equalsIgnoreCase(account.getEmail())) {
             final ObjectUserAccount existingEmail = PlayerAccountTable.getAccountByEmail(nextEmail);
             if (existingEmail != null && !existingEmail.getUuid().equals(account.getUuid())) {
-                handler.status(400).result("An account with this email already exists.");
+                handler.status(HttpStatus.BAD_REQUEST).result("An account with this email already exists.");
                 return;
             }
             PlayerAccountTable.setEmail(account.getUuid(), nextEmail);
@@ -97,11 +98,11 @@ public class UpdateAccountSettingsEndpoint implements IEndpoint {
 
         if (nextPassword != null && !nextPassword.isBlank()) {
             if (nextPassword.length() < 8) {
-                handler.status(400).result("Password must be at least 8 characters long");
+                handler.status(HttpStatus.BAD_REQUEST).result("Password must be at least 8 characters long");
                 return;
             }
             if (request.confirmPassword == null || !nextPassword.equals(request.confirmPassword)) {
-                handler.status(400).result("Passwords do not match");
+                handler.status(HttpStatus.BAD_REQUEST).result("Passwords do not match");
                 return;
             }
             PlayerAccountTable.setPassword(account.getUuid(), nextPassword);

@@ -3,6 +3,7 @@ package niwer.photon.web.endpoints.game;
 import java.util.concurrent.TimeUnit;
 
 import io.javalin.http.Context;
+import io.javalin.http.HttpStatus;
 import niwer.lumen.Console;
 import niwer.photon.PhotonEngine;
 import niwer.photon.sql.CrashReportTable;
@@ -30,20 +31,20 @@ public class AddCrashReportEndpoint implements IEndpoint {
     
             /* Ensure all parameters are provided */
             if (FILE_MESSAGE == null || TIME_STAMP == null || USER_UUID == null) {
-                handler.status(400).result("Missing parameters");
+                handler.status(HttpStatus.BAD_REQUEST).result("Missing parameters");
                 return;
             }
     
             /* Ensure parameters are not blank */
             if (FILE_MESSAGE.isBlank() || TIME_STAMP.isBlank() || USER_UUID.isBlank() || (SIDE != null && SIDE.isBlank())) {
-                handler.status(400).result("Parameters cannot be blank");
+                handler.status(HttpStatus.BAD_REQUEST).result("Parameters cannot be blank");
                 return;
             }
     
             final CrashReportSides reportSide = SIDE == null ? CrashReportSides.CLIENT : CrashReportSides.fromString(SIDE);
             CrashReportTable.save(USER_UUID, TIME_STAMP, FILE_MESSAGE, reportSide);
             Console.log("Crash report received: " + USER_UUID).sendToProcessor().type(PhotonLogTypes.NETWORK).container(PhotonEngine.LOGGER).send();
-            handler.status(200).result("Crash report received");
+            handler.status(HttpStatus.OK).result("Crash report received");
         } catch (Exception e) {
             IEndpoint.handleException(AddCrashReportEndpoint.class, handler, e);
         }

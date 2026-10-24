@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import io.javalin.http.Context;
+import io.javalin.http.HttpStatus;
 import niwer.photon.objects.ObjectUserAccount;
 import niwer.photon.sql.PlayerAccountTable;
 import niwer.photon.util.GsonUtils;
@@ -28,20 +29,20 @@ public class AuthAccountEndpoint implements IEndpoint {
 
         final Credentials CREDENTIALS = readCredentials(handler);
         if (CREDENTIALS == null || CREDENTIALS.email == null || CREDENTIALS.password == null || CREDENTIALS.email.isBlank() || CREDENTIALS.password.isBlank()) {
-            handler.status(400).result("Missing or blank parameters");
+            handler.status(HttpStatus.BAD_REQUEST).result("Missing or blank parameters");
             return;
         }
 
         /* Fetch user and verify password */
         final ObjectUserAccount ACCOUNT = PlayerAccountTable.getAccountByEmail(CREDENTIALS.email);
         if (ACCOUNT == null || ACCOUNT.password() == null || !HashUtils.passwordMatches(ACCOUNT.password(), CREDENTIALS.password)) {
-            handler.status(401).result("Invalid credentials or access denied");
+            handler.status(HttpStatus.UNAUTHORIZED).result("Invalid credentials or access denied");
             return;
         }
 
         /* Prevent login if account is pending deletion */
         if (PlayerAccountTable.isPendingDeletion(ACCOUNT.getUuid())) {
-            handler.status(403).result("This account has been scheduled for deletion and cannot be accessed.");
+            handler.status(HttpStatus.FORBIDDEN).result("This account has been scheduled for deletion and cannot be accessed.");
             return;
         }
 
@@ -50,7 +51,7 @@ public class AuthAccountEndpoint implements IEndpoint {
         /* Enforce 2FA If enabled (or if user is admin), stop here and return challenge ticket */
         if (ACCOUNT.isTotpEnabled() /* || isAdmin */) { //TODO: Maybe useful in the future to force admins to have 2FA enabled, but for now we allow it
             // if (isAdmin && !account.isTotpEnabled()) {
-            //     handler.status(403).result("Administrator accounts must configure 2FA."); //TODO: Maybe useful in the future to force admins to have 2FA enabled, but for now we allow it
+            //     handler.status(HttpStatus.FORBIDDEN).result("Administrator accounts must configure 2FA."); //TODO: Maybe useful in the future to force admins to have 2FA enabled, but for now we allow it
             //     return;
             // }
 
@@ -68,14 +69,14 @@ public class AuthAccountEndpoint implements IEndpoint {
         /* Normal login (only reached if 2FA is not enabled) */
         if (CREDENTIALS.token != null && !CREDENTIALS.token.isBlank()) {
             if (!EntitlementManager.redeemPurchase(CREDENTIALS.token, ACCOUNT)) {
-                handler.status(403).result("Invalid or expired purchase token");
+                handler.status(HttpStatus.FORBIDDEN).result("Invalid or expired purchase token");
                 return;
             }
         }
 
         final Session AUTH = SessionManager.createSession(ACCOUNT, IS_ADMIN ? SessionScope.ADMIN : SessionScope.USER);
         if (AUTH == null) {
-            handler.status(401).result("Failed to create session");
+            handler.status(HttpStatus.UNAUTHORIZED).result("Failed to create session");
             return;
         }
 

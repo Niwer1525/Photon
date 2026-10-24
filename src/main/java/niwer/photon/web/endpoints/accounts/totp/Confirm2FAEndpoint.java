@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import io.javalin.http.Context;
+import io.javalin.http.HttpStatus;
 import niwer.lumen.Console;
 import niwer.photon.PhotonEngine;
 import niwer.photon.objects.ObjectUserAccount;
@@ -39,7 +40,7 @@ public class Confirm2FAEndpoint implements IEndpoint {
     
             String code = EndpointUtils.getString(ctx, EndpointUtils.parseBody(ctx.body()), "code");
             if (code == null || code.isBlank()) {
-                ctx.status(400).result("Missing 2FA code");
+                ctx.status(HttpStatus.BAD_REQUEST).result("Missing 2FA code");
                 return;
             }
     
@@ -48,9 +49,9 @@ public class Confirm2FAEndpoint implements IEndpoint {
                 PlayerAccountTable.setTotpEnabled(FRESH_ACCOUNT.getUuid(), true);
                 final List<String> PLAIN_RECOVERY_CODES = RecoveryCodesTable.generateAndSaveCodes(FRESH_ACCOUNT.getUuid());
 
-                ctx.status(200).json(Map.of("recovery_codes", PLAIN_RECOVERY_CODES)); // Send the plaintext recovery codes to the user (they should be shown only once)
+                ctx.status(HttpStatus.OK).json(Map.of("recovery_codes", PLAIN_RECOVERY_CODES)); // Send the plaintext recovery codes to the user (they should be shown only once)
                 Console.log("2FA enabled for account %s (UUID: %s)", ACCOUNT.getUsername(), ACCOUNT.getUuid()).sendToProcessor().type(PhotonLogTypes.NETWORK).container(PhotonEngine.LOGGER).send();
-            } else ctx.status(400).result("Invalid 2FA code");
+            } else ctx.status(HttpStatus.BAD_REQUEST).result("Invalid 2FA code");
         } catch (Exception e) {
             IEndpoint.handleException(Confirm2FAEndpoint.class, ctx, e);
         }

@@ -160,6 +160,15 @@ The routes below are the ones typically called by the game client, launcher, Str
 		- Receives subscription events such as `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`.
 		- Also handles `checkout.session.completed` for the purchase-token flow.
 
+- **Blog**
+	- `GET /blog/posts` — List all published blog posts.
+		- Optional query parameter: `lang`.
+	- `GET /blog/rss` — Get the RSS feed for published blog posts.
+		- Optional query parameter: `lang`.
+	- `GET /blog/posts/{slug}` — Get a specific blog post by its slug.
+		- Required path parameter: `slug`.
+		- Optional query parameter: `lang`.
+
 ### Admin endpoints
 
 These routes require an admin session or admin token.
@@ -170,3 +179,13 @@ These routes require an admin session or admin token.
 	- `GET /admin/tables` — List all tables in the database.
 	- `GET /admin/tables/{table}` — List all rows in a specific table.
 		- Required path parameter: `table`.
+
+- **Blog**
+	- `GET /admin/blog/posts` — List all blog posts (including draft/scheduled).
+		- Optional query parameter: `lang`.
+	- `POST /admin/blog/create` — Create a new blog post.
+		- Required body fields: `title`, `content`, `lang`.
+	- `POST /admin/blog/update` — Update an existing blog post.
+		- Required body fields: `slug`, optional `title`, `content`, `lang`.
+	- `POST /admin/blog/delete` — Delete a blog post.
+		- Required body field: `slug`.

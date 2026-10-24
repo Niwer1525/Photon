@@ -3,6 +3,7 @@ package niwer.photon.web.endpoints.accounts;
 import java.util.concurrent.TimeUnit;
 
 import io.javalin.http.Context;
+import io.javalin.http.HttpStatus;
 import niwer.photon.util.session.SessionManager;
 import niwer.photon.util.session.SessionScope;
 import niwer.photon.web.HttpMethod;
@@ -29,7 +30,7 @@ public class LogoutEndpoint implements IEndpoint {
     
             handler.res().addHeader("Set-Cookie", "photon_admin=; HttpOnly; Path=/; Max-Age=0; SameSite=Strict");
             handler.res().addHeader("Set-Cookie", "photon_csrf=; Path=/; Max-Age=0; SameSite=Strict");
-            handler.status(200);
+            handler.status(HttpStatus.OK);
         } catch (Exception e) {
             IEndpoint.handleException(LogoutEndpoint.class, handler, e);
         }

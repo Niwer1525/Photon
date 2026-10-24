@@ -3,6 +3,7 @@ package niwer.photon.web.endpoints.game;
 import java.util.concurrent.TimeUnit;
 
 import io.javalin.http.Context;
+import io.javalin.http.HttpStatus;
 import niwer.lumen.Console;
 import niwer.photon.PhotonEngine;
 import niwer.photon.sql.AnticheatTable;
@@ -28,19 +29,19 @@ public class AddAntiCheatReportEndpoint implements IEndpoint {
     
             /* Ensure all parameters are provided */
             if (FILE_MESSAGE == null || TIME_STAMP == null || USER_UUID == null || OPERATRING_SYSTEM == null) {
-                handler.status(400).result("Missing parameters");
+                handler.status(HttpStatus.BAD_REQUEST).result("Missing parameters");
                 return;
             }
     
             /* Ensure parameters are not blank */
             if (FILE_MESSAGE.isBlank() || TIME_STAMP.isBlank() || USER_UUID.isBlank() || OPERATRING_SYSTEM.isBlank()) {
-                handler.status(400).result("Parameters cannot be blank");
+                handler.status(HttpStatus.BAD_REQUEST).result("Parameters cannot be blank");
                 return;
             }
     
             AnticheatTable.save(USER_UUID, TIME_STAMP, FILE_MESSAGE, OPERATRING_SYSTEM);
             Console.log("Anticheat report received: " + USER_UUID).sendToProcessor().type(PhotonLogTypes.NETWORK).container(PhotonEngine.LOGGER).send();
-            handler.status(200).result("Anticheat report received successfully");
+            handler.status(HttpStatus.OK).result("Anticheat report received successfully");
         } catch (Exception e) {
             IEndpoint.handleException(AddAntiCheatReportEndpoint.class, handler, e);
         }

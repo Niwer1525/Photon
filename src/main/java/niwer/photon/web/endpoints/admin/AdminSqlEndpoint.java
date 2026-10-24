@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import io.javalin.http.Context;
+import io.javalin.http.HttpStatus;
 import niwer.photon.PhotonEngine;
 import niwer.photon.util.GsonUtils;
 import niwer.photon.util.session.SessionManager;
@@ -39,14 +40,14 @@ public class AdminSqlEndpoint implements IEndpoint {
         try {
             if (SessionManager.requireAdministrator(handler) == null) return;
             if (!SessionManager.validateCsrf(handler)) {
-                handler.status(403).result("Invalid CSRF token");
+                handler.status(HttpStatus.FORBIDDEN).result("Invalid CSRF token");
                 return;
             }
     
             /* Get the SQL code entered by the user */
             String sql = GsonUtils.getString(EndpointUtils.readBody(handler), "sql", "sql", null);
             if (sql == null) {
-                handler.status(400).result("SQL is required");
+                handler.status(HttpStatus.BAD_REQUEST).result("SQL is required");
                 return;
             }
             sql = sql.trim();
@@ -54,7 +55,7 @@ public class AdminSqlEndpoint implements IEndpoint {
             /* Ensure it's a valid SQL code, if not cancel. */
             String error = validate(sql);
             if (error != null) {
-                handler.status(400).result(error);
+                handler.status(HttpStatus.BAD_REQUEST).result(error);
                 return;
             }
     
@@ -75,7 +76,7 @@ public class AdminSqlEndpoint implements IEndpoint {
                     }
                 }
             } catch (Exception exception) {
-                handler.status(400).result("SQL rejected: " + exception.getMessage());
+                handler.status(HttpStatus.BAD_REQUEST).result("SQL rejected: " + exception.getMessage());
             }
         } catch (Exception e) {
             IEndpoint.handleException(AdminSqlEndpoint.class, handler, e);

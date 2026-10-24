@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import io.javalin.http.Context;
+import io.javalin.http.HttpStatus;
 import niwer.lumen.Console;
 import niwer.photon.PhotonEngine;
 import niwer.photon.objects.ObjectUserAccount;
@@ -36,7 +37,7 @@ public class Setup2FAEndpoint implements IEndpoint {
     
             /* Check if 2FA is already enabled */
             if(account.isTotpEnabled() /* || (account.getTotpSecret() != null && !account.getTotpSecret().isBlank()) */) {
-                handler.status(400).result("2FA is already enabled for this account");
+                handler.status(HttpStatus.BAD_REQUEST).result("2FA is already enabled for this account");
                 return;
             }
     
@@ -45,14 +46,14 @@ public class Setup2FAEndpoint implements IEndpoint {
                 String encryptedSecret = TotpManager.encrypt(rawSecret);
                 String qrUri = TotpManager.generateQrDataUri(account.getEmail(), rawSecret);
                 PlayerAccountTable.setTotpSecret(account.getUuid(), encryptedSecret); // Save secret to database (totpEnabled remains false until verified)
-                handler.status(200).json(Map.of(
+                handler.status(HttpStatus.OK).json(Map.of(
                     "qrCode", qrUri,
                     "manualKey", rawSecret
                 ));
                 Console.log("2FA setup initiated for account %s (UUID: %s)", account.getUsername(), account.getUuid()).sendToProcessor().type(PhotonLogTypes.NETWORK).container(PhotonEngine.LOGGER).send();
             } catch (Exception e) {
                 Console.log("Error while setting up 2FA for account %s: %s", account.getUsername(), e.getMessage()).error().sendToProcessor().type(PhotonLogTypes.NETWORK).container(PhotonEngine.LOGGER).send();
-                handler.status(500).result("Failed to initiate 2FA setup");
+                handler.status(HttpStatus.INTERNAL_SERVER_ERROR).result("Failed to initiate 2FA setup");
             }
         } catch (Exception e) {
             IEndpoint.handleException(Setup2FAEndpoint.class, handler, e);

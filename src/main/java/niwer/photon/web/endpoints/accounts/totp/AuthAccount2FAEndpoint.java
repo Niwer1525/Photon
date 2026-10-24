@@ -3,6 +3,7 @@ package niwer.photon.web.endpoints.accounts.totp;
 import java.util.concurrent.TimeUnit;
 
 import io.javalin.http.Context;
+import io.javalin.http.HttpStatus;
 import niwer.photon.util.session.Session;
 import niwer.photon.util.session.SessionManager;
 import niwer.photon.web.HttpMethod;
@@ -26,14 +27,14 @@ public class AuthAccount2FAEndpoint implements IEndpoint {
             final String code = EndpointUtils.getString(handler, body, "code");
     
             if (ticket == null || ticket.isBlank() || code == null || code.isBlank()) {
-                handler.status(400).result("Missing ticket or 2FA code");
+                handler.status(HttpStatus.BAD_REQUEST).result("Missing ticket or 2FA code");
                 return;
             }
     
             // Validate ticket and 6-digit TOTP code
             final Session session = SessionManager.complete2FA(ticket, code);
             if (session == null) {
-                handler.status(401).result("Invalid 2FA code or expired attempt");
+                handler.status(HttpStatus.UNAUTHORIZED).result("Invalid 2FA code or expired attempt");
                 return;
             }
     

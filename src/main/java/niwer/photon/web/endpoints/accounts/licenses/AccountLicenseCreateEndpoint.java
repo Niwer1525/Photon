@@ -6,6 +6,7 @@ import java.util.concurrent.TimeUnit;
 import com.google.gson.JsonObject;
 
 import io.javalin.http.Context;
+import io.javalin.http.HttpStatus;
 import niwer.lumen.Console;
 import niwer.photon.Directories;
 import niwer.photon.PhotonEngine;
@@ -42,13 +43,13 @@ public class AccountLicenseCreateEndpoint implements IEndpoint {
                 .orElse(null);
     
             if (PRODUCT == null || PRODUCT.id() == null || PRODUCT.id().isBlank()) {
-                handler.status(400).result("Unknown license product");
+                handler.status(HttpStatus.BAD_REQUEST).result("Unknown license product");
                 return;
             }
     
             final String PRODUCT_ID = PRODUCT.id();
             if (!ACCOUNT.isAdministrator() && !EntitlementManager.hasAccess(ACCOUNT.getUuid(), PRODUCT_ID)) {
-                handler.status(403).result("Purchase or active subscription required for this product");
+                handler.status(HttpStatus.FORBIDDEN).result("Purchase or active subscription required for this product");
                 return;
             }
             final String NAME = GsonUtils.getString(BODY, "name", "name", ACCOUNT.getUsername());
@@ -58,11 +59,11 @@ public class AccountLicenseCreateEndpoint implements IEndpoint {
             final Long COMPUTED_EXPIRES_AT = EXPIRES_AT != null ? EXPIRES_AT : (DURATION_DAYS == null || DURATION_DAYS <= 0L ? null : System.currentTimeMillis() + (DURATION_DAYS * 86400000L));
             final ObjectLicense LICENSE = LicenseManager.issueLicense(PRODUCT_ID, NAME, ACCOUNT.getEmail(), ACCOUNT.getUuid(), COMPUTED_EXPIRES_AT);
             if(LICENSE == null) {
-                handler.status(500).result("Failed to create license");
+                handler.status(HttpStatus.INTERNAL_SERVER_ERROR).result("Failed to create license");
                 return;
             }
             
-            handler.status(200).json(LICENSE.payload());
+            handler.status(HttpStatus.OK).json(LICENSE.payload());
             Console.log("License created for user: %s", LICENSE.creatorUuid()).sendToProcessor().type(PhotonLogTypes.NETWORK).container(PhotonEngine.LOGGER).send();
         } catch (Exception e) {
             IEndpoint.handleException(AccountLicenseCreateEndpoint.class, handler, e);

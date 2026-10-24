@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import io.javalin.http.Context;
+import io.javalin.http.HttpStatus;
 import niwer.photon.util.license.LicenseManager;
 import niwer.photon.util.license.LicenseValidationResult;
 import niwer.photon.web.HttpMethod;
@@ -27,27 +28,27 @@ public class LicenseValidateEndpoint implements IEndpoint {
             final Map<String, Object> BODY = EndpointUtils.parseBody(handler.body());
             final String LICENSE_KEY = EndpointUtils.getString(handler, BODY, "license_key");
             if (LICENSE_KEY == null || LICENSE_KEY.isBlank()) {
-                handler.status(400).result("Missing license key");
+                handler.status(HttpStatus.BAD_REQUEST).result("Missing license key");
                 return;
             }
     
             /* Get the product ID */
             final String EXPECTED_PRODUCT_ID = EndpointUtils.getString(handler, BODY, "product_id");
             if (EXPECTED_PRODUCT_ID == null || EXPECTED_PRODUCT_ID.isBlank()) {
-                handler.status(400).result("Missing product id");
+                handler.status(HttpStatus.BAD_REQUEST).result("Missing product id");
                 return;
             }
     
             /* Get the hardware ID */
             final String HARDWARE_ID = EndpointUtils.getString(handler, BODY, "hardware_id", "hardwareId", "hwid");
             if (HARDWARE_ID == null || HARDWARE_ID.isBlank()) {
-                handler.status(400).result("Missing hwid");
+                handler.status(HttpStatus.BAD_REQUEST).result("Missing hwid");
                 return;
             }
     
             /* Validate the license */
             final LicenseValidationResult result = LicenseManager.validateLicense(LICENSE_KEY, EXPECTED_PRODUCT_ID, HARDWARE_ID);
-            handler.status(200).json(result.payload());
+            handler.status(HttpStatus.OK).json(result.payload());
         } catch (Exception e) {
             IEndpoint.handleException(LicenseValidateEndpoint.class, handler, e);
         }

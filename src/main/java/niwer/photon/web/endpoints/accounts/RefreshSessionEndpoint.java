@@ -24,7 +24,7 @@ public class RefreshSessionEndpoint implements IEndpoint {
             final String refreshToken = EndpointUtils.getString(handler, body, "refreshToken");
             final Session session = SessionManager.refreshSession(refreshToken);
             if (session == null) {
-                handler.status(401).result("Invalid or expired refresh token");
+                handler.status(HttpStatus.UNAUTHORIZED).result("Invalid or expired refresh token");
                 return;
             }
     

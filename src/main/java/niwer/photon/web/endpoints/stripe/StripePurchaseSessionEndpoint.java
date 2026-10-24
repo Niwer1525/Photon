@@ -8,6 +8,7 @@ import com.stripe.model.checkout.Session;
 import com.stripe.param.checkout.SessionRetrieveParams;
 
 import io.javalin.http.Context;
+import io.javalin.http.HttpStatus;
 import niwer.photon.Directories;
 import niwer.photon.objects.ObjectPurchase;
 import niwer.photon.sql.PurchaseTable;
@@ -34,13 +35,13 @@ public class StripePurchaseSessionEndpoint implements IEndpoint {
                 handler.queryParam("token")
             );
             if (SESSION_ID == null || SESSION_ID.isBlank()) {
-                handler.status(400).result("Missing checkout session id");
+                handler.status(HttpStatus.BAD_REQUEST).result("Missing checkout session id");
                 return;
             }
     
             final String API_KEY = Directories.config().stripe_api_key;
             if (API_KEY == null || API_KEY.isBlank()) {
-                handler.status(500).result("stripe_api_key is not configured");
+                handler.status(HttpStatus.INTERNAL_SERVER_ERROR).result("stripe_api_key is not configured");
                 return;
             }
             Stripe.apiKey = API_KEY;
@@ -59,12 +60,12 @@ public class StripePurchaseSessionEndpoint implements IEndpoint {
                 /* Create or retrieve a pending purchase */
                 final ObjectPurchase PURCHASE = PurchaseTable.createOrRetrievePendingPurchase(TOKEN, SESSION.getId(), EMAIL, NAME, PRODUCT_ID);
                 if (PURCHASE == null) {
-                    handler.status(500).result("Failed to seed purchase session");
+                    handler.status(HttpStatus.INTERNAL_SERVER_ERROR).result("Failed to seed purchase session");
                     return;
                 }
                 handler.json(PURCHASE.payload());
             } catch (Exception e) {
-                handler.status(502).result("Failed to resolve checkout session: " + e.getMessage());
+                handler.status(HttpStatus.BAD_GATEWAY).result("Failed to resolve checkout session: " + e.getMessage());
             }
         } catch (Exception e) {
             IEndpoint.handleException(StripePurchaseSessionEndpoint.class, handler, e);

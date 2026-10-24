@@ -6,6 +6,7 @@ import java.io.ByteArrayOutputStream;
 import javax.imageio.ImageIO;
 
 import io.javalin.http.Context;
+import io.javalin.http.HttpStatus;
 import niwer.photon.Directories;
 import niwer.photon.web.HttpMethod;
 
@@ -18,7 +19,7 @@ public class LogoEndpoint implements IEndpoint {
     @Override public void handle(Context handler) {
         final BufferedImage LOGO_BASE64 = Directories.getOfficialLogoImage();
         if (LOGO_BASE64 == null) {
-            handler.status(404).result("Logo not found");
+            handler.status(HttpStatus.NOT_FOUND).result("Logo not found");
             return;
         }
 
@@ -26,7 +27,7 @@ public class LogoEndpoint implements IEndpoint {
         try {
             ImageIO.write(LOGO_BASE64, "png", OUTPUT_STREAM);
         } catch (Exception e) {
-            handler.status(500).result("Error processing logo image");
+            handler.status(HttpStatus.INTERNAL_SERVER_ERROR).result("Error processing logo image");
             return;
         }
 
@@ -34,6 +35,6 @@ public class LogoEndpoint implements IEndpoint {
         handler.header("Cache-Control", "public, max-age=31536000"); // Cache for 1 year
         handler.header("Expires", "Thu, 31 Dec 2037 23:59:59 GMT"); // Set an expiration date far in the future
         handler.header("ETag", "photon_logo_v1"); // Set a static ETag for the logo
-        handler.status(200).result(OUTPUT_STREAM.toByteArray());
+        handler.status(HttpStatus.OK).result(OUTPUT_STREAM.toByteArray());
     }
 }

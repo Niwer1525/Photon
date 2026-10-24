@@ -33,6 +33,9 @@ import niwer.photon.web.endpoints.accounts.totp.Setup2FAEndpoint;
 import niwer.photon.web.endpoints.admin.AdminSqlEndpoint;
 import niwer.photon.web.endpoints.admin.AdminTableDataEndpoint;
 import niwer.photon.web.endpoints.admin.AdminTablesEndpoint;
+import niwer.photon.web.endpoints.blog.PostEndpoint;
+import niwer.photon.web.endpoints.blog.PostsEndpoint;
+import niwer.photon.web.endpoints.blog.PostsRssEndpoint;
 import niwer.photon.web.endpoints.game.AddAntiCheatReportEndpoint;
 import niwer.photon.web.endpoints.game.AddCrashReportEndpoint;
 import niwer.photon.web.endpoints.game.AddHWIDEndpoint;
@@ -63,12 +66,13 @@ public class WebServerEngine {
 
                 /* Register plugins */
                 cfg.registerPlugin(new RateLimitPlugin(plugin_cfg -> {
-                    plugin_cfg.setKeyFunction(ctx -> ctx.ip() + "-" + ctx.path()); // Use IP and path as the key for rate limiting
+                    plugin_cfg.setKeyFunction(ctx -> ctx.ip() + "-" + ctx.path()); // Use IP and path as the key for
+                                                                                   // rate limiting
                 }));
                 cfg.bundledPlugins.enableCors(cors -> {
                     cors.addRule(it -> {
                         it.allowHost("http://localhost:3000", "https://niwer.dev", "https://www.niwer.dev");
-                        it.allowCredentials = true; 
+                        it.allowCredentials = true;
                         it.exposeHeader("X-Photon-User-Token");
                     });
                 });
@@ -114,7 +118,7 @@ public class WebServerEngine {
                     IEndpoint.register(cfg, ChangePasswordEndpoint.class);
                     IEndpoint.register(cfg, DeleteAccountEndpoint.class);
                     IEndpoint.register(cfg, UpdateAccountSettingsEndpoint.class);
-                    
+
                     IEndpoint.register(cfg, AccountLicenseListEndpoint.class);
                     IEndpoint.register(cfg, AccountLicenseProductsEndpoint.class);
                     IEndpoint.register(cfg, AccountLicenseCreateEndpoint.class);
@@ -125,23 +129,32 @@ public class WebServerEngine {
                     IEndpoint.register(cfg, AddServerEndpoint.class);
                     IEndpoint.register(cfg, ServerListEndpoint.class);
                 }
+                {
+                    /* Blog */
+                    IEndpoint.register(cfg, PostsEndpoint.class);
+                    IEndpoint.register(cfg, PostsRssEndpoint.class);
+                    IEndpoint.register(cfg, PostEndpoint.class);
+                }
 
                 /* Force Configure Jetty */
                 cfg.jetty.host = Directories.config().webserver_host;
                 cfg.jetty.port = Directories.config().webserver_port;
-                cfg.jetty.modifyHttpConfiguration(httpConfig -> httpConfig.addCustomizer(new ForwardedRequestCustomizer()));
+                cfg.jetty.modifyHttpConfiguration(
+                        httpConfig -> httpConfig.addCustomizer(new ForwardedRequestCustomizer()));
             });
 
             /* Start the web server */
             WEB_SERVER.start(Directories.config().webserver_host, Directories.config().webserver_port);
 
-            Console.log(getServingBox(Directories.config().webserver_port)).container(PhotonEngine.LOGGER).type(PhotonLogTypes.WEB_SERVER).send();
+            Console.log(getServingBox(Directories.config().webserver_port)).container(PhotonEngine.LOGGER)
+                    .type(PhotonLogTypes.WEB_SERVER).send();
         }, "Web Server Thread");
         thread.start();
     }
 
     /**
-     * Get a printable serving box, so we can easily find where the web server is hosted
+     * Get a printable serving box, so we can easily find where the web server is
+     * hosted
      * 
      * @param port The port of the web server
      * @return The printable box as String
@@ -160,7 +173,8 @@ public class WebServerEngine {
         int maxWidth = getLineMaxWidth(LINE_1, LINE_2, LINE_3) + 3;
 
         /* Print the box */
-        BUILDER.append("\n"); // Default go to next line because Lumen will add text like [Class:233] [00:00:00] [WEB]
+        BUILDER.append("\n"); // Default go to next line because Lumen will add text like [Class:233]
+                              // [00:00:00] [WEB]
         BUILDER.append("┌" + "─".repeat(maxWidth) + "┐\n");
         BUILDER.append(addBordersToLine(LINE_1, maxWidth)).append("\n");
         BUILDER.append(addBordersToLine(LINE_2, maxWidth)).append("\n");
@@ -178,11 +192,12 @@ public class WebServerEngine {
 
     private static int getLineMaxWidth(String... lines) {
         int width = 1;
-        
+
         /* Check for each line if it's longer or not, if longer then update 'width' */
         for (final String LINE : lines) {
             final int LENGTH = LINE.length();
-            if (LENGTH > width) width = LENGTH;
+            if (LENGTH > width)
+                width = LENGTH;
         }
 
         return width;

@@ -3,6 +3,7 @@ package niwer.photon.web.endpoints.game;
 import java.util.concurrent.TimeUnit;
 
 import io.javalin.http.Context;
+import io.javalin.http.HttpStatus;
 import niwer.lumen.Console;
 import niwer.photon.PhotonEngine;
 import niwer.photon.sql.HWIDTable;
@@ -27,19 +28,19 @@ public class AddHWIDEndpoint implements IEndpoint {
     
             /* Ensure all parameters are provided */
             if (HWID == null || USER_UUID == null || OPERATRING_SYSTEM == null) {
-                handler.status(400).result("Missing parameters");
+                handler.status(HttpStatus.BAD_REQUEST).result("Missing parameters");
                 return;
             }
     
             /* Ensure parameters are not blank */
             if (HWID.isBlank() || USER_UUID.isBlank() || OPERATRING_SYSTEM.isBlank()) {
-                handler.status(400).result("Parameters cannot be blank");
+                handler.status(HttpStatus.BAD_REQUEST).result("Parameters cannot be blank");
                 return;
             }
     
             HWIDTable.save(USER_UUID, HWID, OPERATRING_SYSTEM);
             Console.log("Saving new HWID entry for user: " + USER_UUID).sendToProcessor().type(PhotonLogTypes.NETWORK).container(PhotonEngine.LOGGER).send();
-            handler.status(200).result("HWID entry saved successfully");
+            handler.status(HttpStatus.OK).result("HWID entry saved successfully");
         } catch (Exception e) {
             IEndpoint.handleException(AddHWIDEndpoint.class, handler, e);
         }

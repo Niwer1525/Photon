@@ -4,6 +4,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import io.javalin.http.Context;
+import io.javalin.http.HttpStatus;
 import niwer.lumen.Console;
 import niwer.photon.PhotonEngine;
 import niwer.photon.objects.ObjectUserAccount;
@@ -41,65 +42,65 @@ public class CreateAccountEndpoint implements IEndpoint {
     
             /* Ensure all parameters are provided */
             if(USERNAME == null || EMAIL == null || PASSWORD == null) {
-                handler.status(400).result("Missing parameters");
+                handler.status(HttpStatus.BAD_REQUEST).result("Missing parameters");
                 return;
             }
     
             /* Ensure no parameters are blank */
             if(USERNAME.isBlank() || EMAIL.isBlank() || PASSWORD.isBlank()) {
-                handler.status(400).result("Parameters cannot be blank");
+                handler.status(HttpStatus.BAD_REQUEST).result("Parameters cannot be blank");
                 return;
             }
     
             /* Ensure the email address is valid */
             if(!validEmailAddress(EMAIL)) {
-                handler.status(400).result("Invalid email address");
+                handler.status(HttpStatus.BAD_REQUEST).result("Invalid email address");
                 return;
             }
     
             /* Ensure the password is at least 8 characters long */
             if(PASSWORD.length() < 8) {
-                handler.status(400).result("Password must be at least 8 characters long");
+                handler.status(HttpStatus.BAD_REQUEST).result("Password must be at least 8 characters long");
                 return;
             }
     
             /* Ensure the email address is not already in use */
             if(PlayerAccountTable.emailExists(EMAIL)) {
-                handler.status(400).result("An account with this email already exists. Sign in instead.");
+                handler.status(HttpStatus.BAD_REQUEST).result("An account with this email already exists. Sign in instead.");
                 return;
             }
     
             /* Ensure the username is not already in use */
             if(PlayerAccountTable.usernameExists(USERNAME)) {
-                handler.status(400).result("An account with this username already exists.");
+                handler.status(HttpStatus.BAD_REQUEST).result("An account with this username already exists.");
                 return;
             }
     
             /* Check the validity of the purchase token if a token is provided */
             final boolean HAS_PURCHASE_REFERENCE = CHECKOUT_SESSION_ID != null && !CHECKOUT_SESSION_ID.isBlank();
             if (HAS_PURCHASE_REFERENCE && !PurchaseTable.canRedeem(CHECKOUT_SESSION_ID)) {
-                handler.status(403).result("Invalid or expired purchase token");
+                handler.status(HttpStatus.FORBIDDEN).result("Invalid or expired purchase token");
                 return;
             }
     
             final ObjectUserAccount ACCOUNT = PlayerAccountTable.createAccount(USERNAME, EMAIL, PASSWORD);
             if(ACCOUNT == null) {
-                handler.status(500).result("Failed to create account");
+                handler.status(HttpStatus.INTERNAL_SERVER_ERROR).result("Failed to create account");
                 return;
             }
     
             if (HAS_PURCHASE_REFERENCE && !EntitlementManager.redeemPurchase(CHECKOUT_SESSION_ID, ACCOUNT)) {
-                handler.status(500).result("Failed to link purchase token");
+                handler.status(HttpStatus.INTERNAL_SERVER_ERROR).result("Failed to link purchase token");
                 return;
             }
     
             final Session SESSION = SessionManager.login(EMAIL, PASSWORD, SessionScope.USER);
             if (SESSION == null) {
-                handler.status(500).result("Failed to create session");
+                handler.status(HttpStatus.INTERNAL_SERVER_ERROR).result("Failed to create session");
                 return;
             }
     
-            handler.status(200).json(new LoginResponse(SESSION.token(), SESSION.refreshToken(), ACCOUNT.payload()));
+            handler.status(HttpStatus.OK).json(new LoginResponse(SESSION.token(), SESSION.refreshToken(), ACCOUNT.payload()));
             Console.log("A new account was created: %s (UUID: %s)", ACCOUNT.getUsername(), ACCOUNT.getUuid()).sendToProcessor().type(PhotonLogTypes.NETWORK).container(PhotonEngine.LOGGER).send();
         } catch (Exception e) {
             IEndpoint.handleException(CreateAccountEndpoint.class, handler, e);

@@ -4,6 +4,7 @@ import java.util.concurrent.TimeUnit;
 
 import io.javalin.config.JavalinConfig;
 import io.javalin.http.Context;
+import io.javalin.http.HttpStatus;
 import io.javalin.plugin.bundled.RateLimitPlugin;
 import niwer.lumen.Console;
 import niwer.photon.PhotonEngine;
@@ -80,6 +81,6 @@ public interface IEndpoint {
      */
     public static void handleException(Class<? extends IEndpoint> endpointClass, Context handler, Exception e) {
         Console.log("Error in " + endpointClass.getSimpleName(), e).error().type(PhotonLogTypes.WEB_SERVER).container(PhotonEngine.LOGGER).send();
-        handler.status(500).result("Internal server error: " + e.getMessage());
+        handler.status(HttpStatus.INTERNAL_SERVER_ERROR).result("Internal server error: " + e.getMessage());
     }
 }

@@ -5,6 +5,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import io.javalin.http.Context;
+import io.javalin.http.HttpStatus;
 import niwer.photon.objects.ObjectUserAccount;
 import niwer.photon.sql.PlayerAccountTable;
 import niwer.photon.util.HashUtils;
@@ -152,7 +153,7 @@ public final class SessionManager {
      */
     public static ObjectUserAccount requireAccount(Context handler) {
         ObjectUserAccount account = accountFromRequest(handler, SessionScope.USER);
-        if (account == null) handler.status(401).result("Unauthorized");
+        if (account == null) handler.status(HttpStatus.UNAUTHORIZED).result("Unauthorized");
         return account;
     }
 
@@ -165,11 +166,11 @@ public final class SessionManager {
     public static ObjectUserAccount requireAdministrator(Context handler) {
         ObjectUserAccount account = accountFromRequest(handler, SessionScope.ADMIN);
         if (account == null) {
-            handler.status(401).result("Unauthorized");
+            handler.status(HttpStatus.UNAUTHORIZED).result("Unauthorized");
             return null;
         }
         if (!account.isAdministrator()) {
-            handler.status(403).result("Administrator access required");
+            handler.status(HttpStatus.FORBIDDEN).result("Administrator access required");
             return null;
         }
         return account;
