@@ -2,48 +2,62 @@ package niwer.photon.objects;
 
 import java.time.LocalDateTime;
 
+import com.google.gson.annotations.SerializedName;
+
 import niwer.photon.sql.BlogPostsTable.BlogPostStatus;
 import niwer.photon.util.TranslationManager.Language;
 import niwer.queryon.SQLSerializable;
 import niwer.queryon.tables.api.IColumnField;
 import niwer.queryon.tables.api.IDefaultValue;
 
-public class ObjectBlogPost extends SQLSerializable<ObjectBlogPost> {
+public class ObjectBlogPost extends SQLSerializable<ObjectBlogPost> implements IPayloadProvider {
 
-    private static final int AVERAGE_READING_SPEED_WPM = 200; // Average reading speed in words per minute
+    private static transient final int AVERAGE_READING_SPEED_WPM = 200; // Average reading speed in words per minute
 
     @IColumnField(name = "id", primaryKey = true, autoIncrement = true)
     private Integer id;
 
+    @SerializedName("slug")
     @IColumnField(name = "slug", notNull = true, charLimit = 255)
     private String slug;
 
+    @SerializedName("lang")
     @IColumnField(name = "lang", defaultValue = @IDefaultValue(value = "en"))
     private String lang = Language.ENGLISH.code();
 
+    @SerializedName("title")
     @IColumnField(name = "title", notNull = true, charLimit = 255)
     private String title;
 
+    @SerializedName("summary")
     @IColumnField(name = "summary", notNull = true, charLimit = 1024)
     private String summary;
 
+    @SerializedName("content_markdown")
     @IColumnField(name = "content_markdown", notNull = true, charLimit = 65535)
     private String contentMarkdown;
 
+    @SerializedName("cover_image")
     @IColumnField(name = "cover_image")
     private String coverImage; // Base64-encoded image data or URL to the cover image
 
+    @SerializedName("status")
     @IColumnField(name = "status")
     private BlogPostStatus status = BlogPostStatus.DRAFT;
 
+    @SerializedName("published_at")
     @IColumnField(name = "published_at")
     private LocalDateTime publishedAt;
 
+    @SerializedName("created_at")
     @IColumnField(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    @SerializedName("updated_at")
     @IColumnField(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    public Integer getId() { return id; }
 
     public String getSlug() { return slug; }
 
@@ -60,7 +74,7 @@ public class ObjectBlogPost extends SQLSerializable<ObjectBlogPost> {
     public BlogPostStatus getStatus() { return status; }
 
     public LocalDateTime getPublishedAt() { return publishedAt; }
-    
+
     /**
      * Calculates the estimated reading time for the blog post based on its content.
      * @return The estimated reading time in minutes. Returns 1 minute if the content is empty or null.
@@ -70,5 +84,12 @@ public class ObjectBlogPost extends SQLSerializable<ObjectBlogPost> {
 
         final int WORD_COUNT = contentMarkdown.trim().split("\\s+").length;
         return Math.max(1, (int) Math.ceil(WORD_COUNT / (double) AVERAGE_READING_SPEED_WPM));
+    }
+
+    public boolean isValid() {
+        return slug != null && !slug.isBlank() &&
+               title != null && !title.isBlank() &&
+               summary != null && !summary.isBlank() &&
+               contentMarkdown != null && !contentMarkdown.isBlank();
     }
 }

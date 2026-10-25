@@ -30,9 +30,14 @@ import niwer.photon.web.endpoints.accounts.totp.AuthAccount2FAEndpoint;
 import niwer.photon.web.endpoints.accounts.totp.Confirm2FAEndpoint;
 import niwer.photon.web.endpoints.accounts.totp.Disable2FAEndpoint;
 import niwer.photon.web.endpoints.accounts.totp.Setup2FAEndpoint;
+import niwer.photon.web.endpoints.admin.AdminCreatePostEndpoint;
+import niwer.photon.web.endpoints.admin.AdminDeletePostEndpoint;
+import niwer.photon.web.endpoints.admin.AdminPostEndpoint;
+import niwer.photon.web.endpoints.admin.AdminPostsEndpoint;
 import niwer.photon.web.endpoints.admin.AdminSqlEndpoint;
 import niwer.photon.web.endpoints.admin.AdminTableDataEndpoint;
 import niwer.photon.web.endpoints.admin.AdminTablesEndpoint;
+import niwer.photon.web.endpoints.admin.AdminUpdatePostEndpoint;
 import niwer.photon.web.endpoints.blog.PostEndpoint;
 import niwer.photon.web.endpoints.blog.PostsEndpoint;
 import niwer.photon.web.endpoints.blog.PostsRssEndpoint;
@@ -101,6 +106,12 @@ public class WebServerEngine {
                     IEndpoint.register(cfg, AdminTablesEndpoint.class);
                     IEndpoint.register(cfg, AdminTableDataEndpoint.class);
                     IEndpoint.register(cfg, AdminSqlEndpoint.class);
+
+                    IEndpoint.register(cfg, AdminPostsEndpoint.class);
+                    IEndpoint.register(cfg, AdminCreatePostEndpoint.class);
+                    IEndpoint.register(cfg, AdminDeletePostEndpoint.class);
+                    IEndpoint.register(cfg, AdminUpdatePostEndpoint.class);
+                    IEndpoint.register(cfg, AdminPostEndpoint.class);
                 }
                 {
                     /* Stripe */
@@ -139,8 +150,7 @@ public class WebServerEngine {
                 /* Force Configure Jetty */
                 cfg.jetty.host = Directories.config().webserver_host;
                 cfg.jetty.port = Directories.config().webserver_port;
-                cfg.jetty.modifyHttpConfiguration(
-                        httpConfig -> httpConfig.addCustomizer(new ForwardedRequestCustomizer()));
+                cfg.jetty.modifyHttpConfiguration(httpConfig -> httpConfig.addCustomizer(new ForwardedRequestCustomizer()));
             });
 
             /* Start the web server */
@@ -174,7 +184,6 @@ public class WebServerEngine {
 
         /* Print the box */
         BUILDER.append("\n"); // Default go to next line because Lumen will add text like [Class:233]
-                              // [00:00:00] [WEB]
         BUILDER.append("┌" + "─".repeat(maxWidth) + "┐\n");
         BUILDER.append(addBordersToLine(LINE_1, maxWidth)).append("\n");
         BUILDER.append(addBordersToLine(LINE_2, maxWidth)).append("\n");

@@ -183,9 +183,13 @@ These routes require an admin session or admin token.
 - **Blog**
 	- `GET /admin/blog/posts` — List all blog posts (including draft/scheduled).
 		- Optional query parameter: `lang`.
-	- `POST /admin/blog/create` — Create a new blog post.
-		- Required body fields: `title`, `content`, `lang`.
-	- `POST /admin/blog/update` — Update an existing blog post.
-		- Required body fields: `slug`, optional `title`, `content`, `lang`.
-	- `POST /admin/blog/delete` — Delete a blog post.
-		- Required body field: `slug`.
+	- `GET /admin/blog/posts/{uuid}` — Get a specific blog post by its UUID.
+		- Required path parameter: `uuid`.
+	- `POST /admin/blog/posts/create` — Create a new blog post.
+		- Required body fields: `slug`, `title_fr`, `title_en`, `content_fr`, `content_en`.
+		- Optional body fields: `summary_fr`, `summary_en`, `scheduled_at`, `isDraft`.
+	- `POST /admin/blog/posts/update` — Update an existing blog post.
+		- Required body fields: `post_id`, `slug`, `title`, `content`.
+		- Optional body fields: `summary`, `scheduled_at`.
+	- `POST /admin/blog/posts/delete/{uuid}` — Delete a blog post.
+		- Required path parameter: `uuid`.

@@ -1,6 +1,8 @@
 package niwer.photon.util;
 
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import niwer.lumen.Console;
@@ -18,10 +20,14 @@ import niwer.queryon.queries.interaction.SelectionManager;
  */
 public class AccountRetentionPurger implements Runnable {
 
+    private static final ScheduledExecutorService SCHEDULER = Executors.newSingleThreadScheduledExecutor(r -> {
+        Thread t = new Thread(r, "AccountRetentionPurger");
+        t.setDaemon(true);
+        return t;
+    });
+    
     public static void createPurgerScheduler() {
-        Thread retentionThread = new Thread(new AccountRetentionPurger(), "AccountRetentionPurger");
-        retentionThread.setDaemon(true);
-        retentionThread.start();
+        SCHEDULER.scheduleAtFixedRate(new AccountRetentionPurger(), 0, 24, TimeUnit.HOURS);
     }
 
     private AccountRetentionPurger() {}

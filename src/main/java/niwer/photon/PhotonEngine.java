@@ -29,6 +29,7 @@ import niwer.photon.sql.RecoveryCodesTable;
 import niwer.photon.sql.ServerTable;
 import niwer.photon.sql.SubscriptionTable;
 import niwer.photon.util.AccountRetentionPurger;
+import niwer.photon.util.BlogPostScheduler;
 import niwer.photon.util.PhotonLogTypes;
 import niwer.photon.util.TranslationManager;
 import niwer.photon.util.license.LicensePurger;
@@ -180,6 +181,9 @@ public class PhotonEngine {
 
         /* Run the licenses purger */
         LicensePurger.createPurgerScheduler();
+
+        /* Run the blog post scheduler */
+        BlogPostScheduler.createScheduler();
 
         DATA_BASE.syncSchema(); // We're syncing the schema after the backup to ensure that the backup to avoid
                                 // losing data.

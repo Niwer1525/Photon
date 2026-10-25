@@ -43,6 +43,8 @@ public class TranslationManager {
 		 * @return The language if found, otherwise the default language (ENGLISH).
 		 */
 		public static Language fromString(String name) {
+			if(name == null || name.isBlank()) return ENGLISH; /* Default to English if the name is null or blank */
+
 			for (final Language LANG : Language.values()) {
 				if (LANG.name().equalsIgnoreCase(name) || LANG.code.equalsIgnoreCase(name)) return LANG;
 			}

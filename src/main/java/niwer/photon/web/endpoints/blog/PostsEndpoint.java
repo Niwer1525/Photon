@@ -7,6 +7,7 @@ import com.beust.jcommander.internal.Lists;
 
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
+import niwer.photon.objects.IPayloadProvider;
 import niwer.photon.objects.ObjectBlogPost;
 import niwer.photon.sql.BlogPostsTable;
 import niwer.photon.util.TranslationManager.Language;
@@ -26,6 +27,6 @@ public class PostsEndpoint implements IEndpoint {
         List<ObjectBlogPost> posts = BlogPostsTable.getAllPublishedPosts(LANGUAGE);
         if(posts == null || posts.isEmpty()) posts = Lists.newArrayList();
         
-        handler.status(HttpStatus.OK).json(posts);
+        handler.status(HttpStatus.OK).json(IPayloadProvider.payloadCollection(posts));
     }
 }

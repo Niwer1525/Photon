@@ -33,6 +33,6 @@ public class PostEndpoint implements IEndpoint {
             return;
         }
         
-        handler.status(HttpStatus.OK).json(POST);
+        handler.status(HttpStatus.OK).json(POST.payload());
     }
 }

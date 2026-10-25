@@ -1,5 +1,9 @@
 package niwer.photon.util.license;
 
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
 import niwer.photon.sql.LicenseTable;
 
 /**
@@ -8,11 +12,15 @@ import niwer.photon.sql.LicenseTable;
  */
 public class LicensePurger implements Runnable {
 
-    public static void createPurgerScheduler() {
-        Thread purgerThread = new Thread(new LicensePurger(), "LicensePurger");
+    private static final ScheduledExecutorService SCHEDULER = Executors.newSingleThreadScheduledExecutor(r -> {
+        Thread purgerThread = new Thread(r, "LicensePurger");
         purgerThread.setDaemon(true);
         purgerThread.setPriority(Thread.MIN_PRIORITY);
-        purgerThread.start();
+        return purgerThread;
+    });
+
+    public static void createPurgerScheduler() {
+        SCHEDULER.scheduleAtFixedRate(new LicensePurger(), 0, 24, TimeUnit.HOURS);
     }
 
     @Override
