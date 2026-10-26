@@ -1,6 +1,7 @@
 package niwer.photon.objects;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 import com.google.gson.annotations.SerializedName;
 
@@ -84,6 +85,13 @@ public class ObjectBlogPost extends SQLSerializable<ObjectBlogPost> implements I
 
         final int WORD_COUNT = contentMarkdown.trim().split("\\s+").length;
         return Math.max(1, (int) Math.ceil(WORD_COUNT / (double) AVERAGE_READING_SPEED_WPM));
+    }
+
+    @Override
+    public Map<String, Object> payload() {
+        final Map<String, Object> PAYLOAD = IPayloadProvider.super.payload();
+        PAYLOAD.put("reading_time_minutes", getReadingTimeMinutes());
+        return PAYLOAD;
     }
 
     public boolean isValid() {
