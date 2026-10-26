@@ -68,7 +68,7 @@ public class BlogPostsTable extends Table {
                         Expressions.isEqualTo("status", BlogPostStatus.PUBLISHED),
                         Expressions.and(
                             Expressions.isLessThanOrEqualTo("published_at", LocalDateTime.now()),
-                            Expressions.isEqualTo("language", lang.code())
+                            Expressions.isEqualTo("lang", lang.code())
                         )
                     )
                 )
@@ -90,7 +90,7 @@ public class BlogPostsTable extends Table {
                         Expressions.isEqualTo("status", BlogPostStatus.PUBLISHED),
                         Expressions.and(
                             Expressions.isLessThanOrEqualTo("published_at", LocalDateTime.now()),
-                            Expressions.isEqualTo("language", lang.code())
+                            Expressions.isEqualTo("lang", lang.code())
                         ),
                         Expressions.isEqualTo("slug", slug)
                     )

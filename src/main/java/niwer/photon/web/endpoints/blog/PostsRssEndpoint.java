@@ -14,7 +14,7 @@ import niwer.photon.web.endpoints.IEndpoint;
 
 public class PostsRssEndpoint implements IEndpoint {
 
-    @Override public String path() { return "/blog/posts/rss"; }
+    @Override public String path() { return "/blog/rss"; }
 
     @Override public HttpMethod method() { return HttpMethod.GET; }
 

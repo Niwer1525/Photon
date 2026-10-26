@@ -1,8 +1,10 @@
 package niwer.photon.objects;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -58,10 +60,22 @@ public interface IPayloadProvider {
      * @return The converted value.
      */
     private static Object convertValue(Object value) {
+        if (value == null) return null;
         if (value instanceof Enum<?> enumValue) return enumValue.name(); // Convert enum to its name
         if (value instanceof LocalDateTime localDateTime) return localDateTime.toString(); // Convert LocalDateTime to string
         if (value instanceof LocalDate localDate) return localDate.toString(); // Convert LocalDate to string
         if (value instanceof IPayloadProvider payloadProvider) return payloadProvider.payload(); // Convert IPayloadProvider to its payload
+        if (value instanceof Map<?, ?> map) {
+            final Map<Object, Object> CONVERTED = new LinkedHashMap<>();
+            map.forEach((key, mapValue) -> CONVERTED.put(key, convertValue(mapValue)));
+            return CONVERTED;
+        }
+        if (value.getClass().isArray()) {
+            final int LENGTH = Array.getLength(value);
+            final Collection<Object> CONVERTED = new ArrayList<>(LENGTH);
+            for (int i = 0; i < LENGTH; i++) CONVERTED.add(convertValue(Array.get(value, i)));
+            return CONVERTED;
+        }
         return value; // Return the value as is for other types
     }
 

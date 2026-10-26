@@ -13,6 +13,8 @@ import niwer.photon.web.endpoints.HomeEndpoint;
 import niwer.photon.web.endpoints.IEndpoint;
 import niwer.photon.web.endpoints.LicenseValidateEndpoint;
 import niwer.photon.web.endpoints.LogoEndpoint;
+import niwer.photon.web.endpoints.StripePricesEndpoint;
+import niwer.photon.web.endpoints.StatisticsEndpoint;
 import niwer.photon.web.endpoints.accounts.AccountEntitlementsEndpoint;
 import niwer.photon.web.endpoints.accounts.AuthAccountEndpoint;
 import niwer.photon.web.endpoints.accounts.ChangePasswordEndpoint;
@@ -94,6 +96,7 @@ public class WebServerEngine {
                 IEndpoint.register(cfg, DownloadEndpoint.class);
                 IEndpoint.register(cfg, GetAssetsEndpoint.class);
                 IEndpoint.register(cfg, GetProductLatestVersionEndpoint.class);
+                IEndpoint.register(cfg, StatisticsEndpoint.class);
                 {
                     /* 2FA */
                     IEndpoint.register(cfg, Setup2FAEndpoint.class);
@@ -115,6 +118,7 @@ public class WebServerEngine {
                 }
                 {
                     /* Stripe */
+                    IEndpoint.register(cfg, StripePricesEndpoint.class);
                     IEndpoint.register(cfg, StripePurchaseSessionEndpoint.class);
                     IEndpoint.register(cfg, StripeWebhookEndpoint.class);
                 }

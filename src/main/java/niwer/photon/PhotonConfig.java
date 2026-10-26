@@ -40,6 +40,7 @@ public class PhotonConfig {
 
     /* Github */
     @SerializedName("github_pat") public String github_pat = ""; // Personal Access Token for GitHub API authentication
+    @SerializedName("github_username") public String github_username = ""; // GitHub username for API requests
 
     /* Mail */
     @SerializedName("mail_sender_email") public String mail_sender_email = "sender@example.org";
@@ -47,6 +48,9 @@ public class PhotonConfig {
     @SerializedName("mail_smtp_port") public int mail_smtp_port = 587;
     @SerializedName("mail_username") public String mail_username = "";
     @SerializedName("mail_password") public String mail_password = "";
+
+    /* Wakatime */
+    @SerializedName("wakatime_api_key") public String wakatime_api_key = "";
 
     /* Stripe */
     @SerializedName("stripe_api_key") public String stripe_api_key = "";

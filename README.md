@@ -96,6 +96,8 @@ The routes below are the ones typically called by the game client, launcher, Str
 - **General**
 	- `GET /` — Sends you back to `niwer.dev/panel`
 	- `GET /photon_logo` — Returns the Photon logo image.
+	- `GET /statistics` — Returns the stats (Github, Gists & Wakatime) for the defined user in the config file.
+	- `GET /stripe_prices` — Returns the Stripe prices for all active products defined in Stripe.
 
 - **Accounts**
 	- `POST /accounts/create_account` — Create an account.

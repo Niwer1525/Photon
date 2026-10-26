@@ -6,6 +6,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 
 import niwer.photon.util.GsonUtils;
 import niwer.photon.web.HttpMethod;
@@ -20,11 +21,11 @@ public abstract class ApiRequest<T> {
     protected final transient HttpClient CLIENT;
 
     protected ApiRequest() {
-        try {
-            this.CLIENT = HttpClient.newHttpClient();
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to initialize HTTP client", e);
-        }
+        this(HttpClient.newHttpClient());
+    }
+
+    protected ApiRequest(HttpClient client) {
+        this.CLIENT = Objects.requireNonNull(client, "client");
     }
 
     protected ApiRequest(HttpClient.Redirect redirect) {
@@ -75,7 +76,7 @@ public abstract class ApiRequest<T> {
     private final HttpRequest asRequest() {
         final HttpRequest.Builder builder = HttpRequest.newBuilder().uri(this.toURI()).header("User-Agent", "Photon-Backend");
         this.addHeaders(builder); // Add any additional headers defined in the subclass
-
+        
         switch (this.method()) {
             case GET -> builder.GET();
             case POST -> builder.POST(this.prepareBody());

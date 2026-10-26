@@ -12,6 +12,10 @@ public abstract class GithubApiRequest<T> extends ApiRequest<T> {
         super();
     }
 
+    protected GithubApiRequest(HttpClient client) {
+        super(client);
+    }
+
     protected GithubApiRequest(HttpClient.Redirect redirect) {
         super(redirect);
     }
