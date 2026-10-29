@@ -101,8 +101,8 @@ public class UpdateAccountSettingsEndpoint implements IEndpoint {
                 handler.status(HttpStatus.BAD_REQUEST).result("Password must be at least 8 characters long");
                 return;
             }
-            if (request.confirmPassword == null || !nextPassword.equals(request.confirmPassword)) {
-                handler.status(HttpStatus.BAD_REQUEST).result("Passwords do not match");
+            if (request.confirmNewPassword == null || !nextPassword.equals(request.confirmNewPassword)) {
+                handler.status(HttpStatus.BAD_REQUEST).result("New passwords do not match");
                 return;
             }
             PlayerAccountTable.setPassword(account.getUuid(), nextPassword);
@@ -118,7 +118,7 @@ public class UpdateAccountSettingsEndpoint implements IEndpoint {
         String username,
         String email,
         String newPassword,
-        String confirmPassword,
+        String confirmNewPassword,
         String code
     ) {}
 }

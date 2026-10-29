@@ -38,10 +38,11 @@ public class CreateAccountEndpoint implements IEndpoint {
             final String USERNAME = handler.formParam("username");
             final String EMAIL = handler.formParam("email");
             final String PASSWORD = handler.formParam("password");
+            final String CONFIRM_PASSWORD = handler.formParam("confirm_password");
             final String CHECKOUT_SESSION_ID = EndpointUtils.firstNonBlank(handler.formParam("checkoutSessionId"), handler.formParam("token"));
     
             /* Ensure all parameters are provided */
-            if(USERNAME == null || EMAIL == null || PASSWORD == null) {
+            if(USERNAME == null || EMAIL == null || PASSWORD == null || CONFIRM_PASSWORD == null) {
                 handler.status(HttpStatus.BAD_REQUEST).result("Missing parameters");
                 return;
             }
@@ -61,6 +62,11 @@ public class CreateAccountEndpoint implements IEndpoint {
             /* Ensure the password is at least 8 characters long */
             if(PASSWORD.length() < 8) {
                 handler.status(HttpStatus.BAD_REQUEST).result("Password must be at least 8 characters long");
+                return;
+            }
+
+            if(!PASSWORD.equals(CONFIRM_PASSWORD)) {
+                handler.status(HttpStatus.BAD_REQUEST).result("Passwords do not match");
                 return;
             }
     
