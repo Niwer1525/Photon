@@ -1,6 +1,8 @@
 package niwer.photon.objects;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import com.google.gson.annotations.SerializedName;
@@ -58,6 +60,8 @@ public class ObjectBlogPost extends SQLSerializable<ObjectBlogPost> implements I
     @IColumnField(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    private transient List<ObjectBlogPostSource> sources = List.of();
+
     public Integer getId() { return id; }
 
     public String getSlug() { return slug; }
@@ -76,6 +80,10 @@ public class ObjectBlogPost extends SQLSerializable<ObjectBlogPost> implements I
 
     public LocalDateTime getPublishedAt() { return publishedAt; }
 
+    public void setSources(List<ObjectBlogPostSource> sources) {
+        this.sources = sources == null ? List.of() : sources;
+    }
+
     /**
      * Calculates the estimated reading time for the blog post based on its content.
      * @return The estimated reading time in minutes. Returns 1 minute if the content is empty or null.
@@ -91,6 +99,7 @@ public class ObjectBlogPost extends SQLSerializable<ObjectBlogPost> implements I
     public Map<String, Object> payload() {
         final Map<String, Object> PAYLOAD = IPayloadProvider.super.payload();
         PAYLOAD.put("reading_time_minutes", getReadingTimeMinutes());
+        PAYLOAD.put("sources", sources == null ? Collections.emptyList() : sources.stream().map(ObjectBlogPostSource::payload).toList());
         return PAYLOAD;
     }
 

@@ -44,15 +44,19 @@ public class BlogPostsTable extends Table {
     }
 
     public static List<ObjectBlogPost> getAllPosts() {
-        return SelectionManager.select(PhotonEngine.DATA_BASE, BlogPostsTable.class)
+        List<ObjectBlogPost> posts = SelectionManager.select(PhotonEngine.DATA_BASE, BlogPostsTable.class)
                 .orderBy("created_at", EnumOrder.DESC)
                 .executeList(ObjectBlogPost.class);
+        posts.forEach(post -> post.setSources(BlogPostSourcesTable.getByPostSlug(post.getSlug())));
+        return posts;
     }
 
     public static ObjectBlogPost getPostById(int id) {
-        return SelectionManager.select(PhotonEngine.DATA_BASE, BlogPostsTable.class)
+        ObjectBlogPost post = SelectionManager.select(PhotonEngine.DATA_BASE, BlogPostsTable.class)
                 .where(Expressions.isEqualTo("id", id))
                 .executeSerializable(ObjectBlogPost.class);
+        if (post != null) post.setSources(BlogPostSourcesTable.getByPostSlug(post.getSlug()));
+        return post;
     }
 
     /**
@@ -62,7 +66,7 @@ public class BlogPostsTable extends Table {
      * @return A list of ObjectBlogPost instances representing the published blog posts in the specified language.
      */
     public static List<ObjectBlogPost> getAllPublishedPosts(Language lang) {
-        return SelectionManager.select(PhotonEngine.DATA_BASE, BlogPostsTable.class)
+        List<ObjectBlogPost> posts = SelectionManager.select(PhotonEngine.DATA_BASE, BlogPostsTable.class)
                 .where(
                     Expressions.and(
                         Expressions.isEqualTo("status", BlogPostStatus.PUBLISHED),
@@ -74,6 +78,8 @@ public class BlogPostsTable extends Table {
                 )
                 .orderBy("created_at", EnumOrder.DESC)
                 .executeList(ObjectBlogPost.class);
+        posts.forEach(post -> post.setSources(BlogPostSourcesTable.getByPostSlug(post.getSlug())));
+        return posts;
     }
 
     /**
@@ -84,7 +90,7 @@ public class BlogPostsTable extends Table {
      * @return An ObjectBlogPost instance representing the published blog post with the specified slug and language, or null if no such post exists.
      */
     public static ObjectBlogPost getPublishedPostBySlug(String slug, Language lang) {
-        return SelectionManager.select(PhotonEngine.DATA_BASE, BlogPostsTable.class)
+        ObjectBlogPost post = SelectionManager.select(PhotonEngine.DATA_BASE, BlogPostsTable.class)
                 .where(
                     Expressions.and(
                         Expressions.isEqualTo("status", BlogPostStatus.PUBLISHED),
@@ -96,6 +102,8 @@ public class BlogPostsTable extends Table {
                     )
                 )
                 .executeSerializable(ObjectBlogPost.class);
+        if (post != null) post.setSources(BlogPostSourcesTable.getByPostSlug(post.getSlug()));
+        return post;
     }
 
     /**

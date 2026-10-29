@@ -1,13 +1,16 @@
 package niwer.photon.web.endpoints.admin;
 
+import java.net.URI;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
 import niwer.lumen.Console;
 import niwer.photon.PhotonEngine;
+import niwer.photon.sql.BlogPostSourcesTable;
 import niwer.photon.sql.BlogPostsTable;
 import niwer.photon.sql.BlogPostsTable.BlogPostStatus;
 import niwer.photon.util.PhotonLogTypes;
@@ -30,13 +33,16 @@ public class AdminCreatePostEndpoint implements IEndpoint {
             if (SessionManager.requireAdministrator(handler) == null) return;
 
             final BlogPostPayload PAYLOAD = handler.bodyAsClass(BlogPostPayload.class);
-            if(PAYLOAD == null || !PAYLOAD.isValid()) {
+            if(PAYLOAD == null || !PAYLOAD.isValid() || !PAYLOAD.sourcesAreValid()) {
                 handler.status(HttpStatus.BAD_REQUEST).result("Invalid payload");
                 return;
             }
 
             final LocalDateTime PUBLISHED_AT = PAYLOAD.draft() ? null : (PAYLOAD.isScheduled() ? PAYLOAD.getScheduledAt() : LocalDateTime.now()); // If draft, published_at is null. If scheduled, use the provided date. Otherwise, use the current date and time.
             final BlogPostStatus STATUS = PAYLOAD.draft() ? BlogPostStatus.DRAFT : (PAYLOAD.getScheduledAt() != null ? BlogPostStatus.SCHEDULED : BlogPostStatus.PUBLISHED); // Determine the status based on whether it's a draft, scheduled, or published.
+
+            /* Sources */
+            BlogPostSourcesTable.replaceForPost(PAYLOAD.slug().toLowerCase().replace(" ", "-"), PAYLOAD.sourceData());
 
             /* French variant */
             BlogPostsTable.createPost(
@@ -80,7 +86,8 @@ public class AdminCreatePostEndpoint implements IEndpoint {
         String summary_en,
 
         String content_fr,
-        String content_en
+        String content_en,
+        List<SourcePayload> sources
     ) {
 
         /**
@@ -97,6 +104,16 @@ public class AdminCreatePostEndpoint implements IEndpoint {
                    title_en != null && !title_en.isBlank() &&
                    content_fr != null && !content_fr.isBlank() &&
                    content_en != null && !content_en.isBlank();
+        }
+
+        public boolean sourcesAreValid() {
+            if (sources == null) return true;
+            return sources.stream().allMatch(SourcePayload::isValid);
+        }
+
+        public List<BlogPostSourcesTable.SourceData> sourceData() {
+            if (sources == null) return List.of();
+            return sources.stream().map(SourcePayload::toData).toList();
         }
 
         public boolean isScheduled() {
@@ -119,6 +136,24 @@ public class AdminCreatePostEndpoint implements IEndpoint {
                 return LocalDate.parse(scheduled_at).atStartOfDay();
             } catch (Exception e) {
                 return null;
+            }
+        }
+
+        private static final record SourcePayload(String date, String url, List<String> authors) {
+            public boolean isValid() {
+                if (date == null || url == null || url.isBlank()) return false;
+                try {
+                    LocalDate.parse(date);
+                    final String SCHEME = URI.create(url).getScheme();
+                    return ("http".equalsIgnoreCase(SCHEME) || "https".equalsIgnoreCase(SCHEME))
+                        && (authors == null || authors.stream().allMatch(author -> author != null && !author.isBlank()));
+                } catch (Exception e) {
+                    return false;
+                }
+            }
+
+            public BlogPostSourcesTable.SourceData toData() {
+                return new BlogPostSourcesTable.SourceData(LocalDate.parse(date), url, authors == null ? List.of() : authors);
             }
         }
     }

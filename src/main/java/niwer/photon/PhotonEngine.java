@@ -19,6 +19,7 @@ import niwer.lumen.container.Container;
 import niwer.photon.discord.BotEngine;
 import niwer.photon.sql.AnticheatTable;
 import niwer.photon.sql.BlogPostsTable;
+import niwer.photon.sql.BlogPostSourcesTable;
 import niwer.photon.sql.CrashReportTable;
 import niwer.photon.sql.DiscordLogTable;
 import niwer.photon.sql.HWIDTable;
@@ -145,6 +146,7 @@ public class PhotonEngine {
                 .registerTable(DiscordLogTable.class)
 
                 /* Blog Posts */
+                .registerTable(BlogPostSourcesTable.class)
                 .registerTable(BlogPostsTable.class)
 
                 /* User Accounts */

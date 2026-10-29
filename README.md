@@ -189,9 +189,11 @@ These routes require an admin session or admin token.
 		- Required path parameter: `uuid`.
 	- `POST /admin/blog/posts/create` — Create a new blog post.
 		- Required body fields: `slug`, `title_fr`, `title_en`, `content_fr`, `content_en`.
-		- Optional body fields: `summary_fr`, `summary_en`, `scheduled_at`, `isDraft`.
+		- Optional body fields: `summary_fr`, `summary_en`, `scheduled_at`, `draft`, `sources`.
+		- Each `sources` entry contains a required ISO date (`date`), an HTTP(S) `url`, and an optional `authors` array of names.
 	- `POST /admin/blog/posts/update` — Update an existing blog post.
 		- Required body fields: `post_id`, `slug`, `title`, `content`.
-		- Optional body fields: `summary`, `scheduled_at`.
+		- Optional body fields: `summary`, `scheduled_at`, `sources`.
+		- When supplied, `sources` replaces the complete shared source list for both language variants.
 	- `POST /admin/blog/posts/delete/{uuid}` — Delete a blog post.
 		- Required path parameter: `uuid`.
