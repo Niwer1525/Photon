@@ -1,6 +1,8 @@
 package niwer.photon.objects;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -79,6 +81,13 @@ public class ObjectBlogPost extends SQLSerializable<ObjectBlogPost> implements I
     public BlogPostStatus getStatus() { return status; }
 
     public LocalDateTime getPublishedAt() { return publishedAt; }
+
+    /**
+     * @return The published date of the blog post formatted as an RFC 1123 date string, suitable for use in RSS feeds.
+     */
+    public String getAsRFC1123Date() {
+        return DateTimeFormatter.RFC_1123_DATE_TIME.format(this.getPublishedAt().atOffset(ZoneOffset.UTC));
+    }
 
     public void setSources(List<ObjectBlogPostSource> sources) {
         this.sources = sources == null ? List.of() : sources;

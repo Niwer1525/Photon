@@ -21,16 +21,20 @@ public class PostsRssEndpoint implements IEndpoint {
     @Override public void handle(Context handler) {
         IEndpoint.setupRateLimit(handler, 15, TimeUnit.MINUTES);
 
-        final Language LANGUAGE = Language.fromString(handler.queryParam("lang"));
-        final List<ObjectBlogPost> POSTS = BlogPostsTable.getAllPublishedPosts(LANGUAGE);
-        final String RSS_XML = RssFeedGenerator.buildRssXml(POSTS, LANGUAGE);
-        if(RSS_XML == null || RSS_XML.isBlank()) {
-            handler.status(HttpStatus.INTERNAL_SERVER_ERROR).result("Failed to generate RSS feed");
-            return;
+        try {
+            final Language LANGUAGE = Language.fromString(handler.queryParam("lang"));
+            final List<ObjectBlogPost> POSTS = BlogPostsTable.getAllPublishedPosts(LANGUAGE);
+            final String RSS_XML = RssFeedGenerator.buildRssXml(POSTS, LANGUAGE);
+            if(RSS_XML == null || RSS_XML.isBlank()) {
+                handler.status(HttpStatus.INTERNAL_SERVER_ERROR).result("Failed to generate RSS feed");
+                return;
+            }
+            handler
+                .status(HttpStatus.OK)
+                .contentType("application/rss+xml; charset=utf-8")
+                .result(RSS_XML);
+        } catch (Exception e) {
+            IEndpoint.handleException(PostsRssEndpoint.class, handler, e);
         }
-        handler
-            .status(HttpStatus.OK)
-            .contentType("application/rss+xml; charset=utf-8")
-            .result(RSS_XML);
     }
 }
