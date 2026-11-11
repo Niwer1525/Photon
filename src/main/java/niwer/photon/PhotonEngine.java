@@ -3,6 +3,7 @@ package niwer.photon;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -79,6 +80,20 @@ public class PhotonEngine {
         } catch (IOException | URISyntaxException e) {
         }
         return "UNKNOWN";
+    }
+
+    /**
+     * Get the current local IP of the machine
+     *
+     * @return the current local IP of the machine
+     */
+    public static String getCurrentLocalIP() {
+        try (final DatagramSocket DATAGRAM_SOCKET = new DatagramSocket()) {
+            DATAGRAM_SOCKET.connect(InetAddress.getByName("8.8.8.8"), 12345);
+            return DATAGRAM_SOCKET.getLocalAddress().getHostAddress();
+        } catch (Exception e) {
+            return "UNKNOWN";
+        }
     }
 
     /**

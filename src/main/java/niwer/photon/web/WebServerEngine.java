@@ -13,8 +13,8 @@ import niwer.photon.web.endpoints.HomeEndpoint;
 import niwer.photon.web.endpoints.IEndpoint;
 import niwer.photon.web.endpoints.LicenseValidateEndpoint;
 import niwer.photon.web.endpoints.LogoEndpoint;
-import niwer.photon.web.endpoints.StripePricesEndpoint;
 import niwer.photon.web.endpoints.StatisticsEndpoint;
+import niwer.photon.web.endpoints.StripePricesEndpoint;
 import niwer.photon.web.endpoints.accounts.AccountEntitlementsEndpoint;
 import niwer.photon.web.endpoints.accounts.AuthAccountEndpoint;
 import niwer.photon.web.endpoints.accounts.ChangePasswordEndpoint;
@@ -180,7 +180,7 @@ public class WebServerEngine {
         final String PADDING = "    ";
         final String LINE_1 = PADDING + "Serving!";
         final String LINE_2 = PADDING + String.format("- Local:    http://localhost:%d", port);
-        final String LINE_3 = PADDING + String.format("- Network:  %s:%d", "http://192.168.x.x", port);
+        final String LINE_3 = PADDING + String.format("- Network:  %s:%d", "http://"+PhotonEngine.getCurrentLocalIP(), port);
 
         /* Find the longest line to determine the box width */
         /* '3' is a little extra to the right side */
@@ -209,8 +209,7 @@ public class WebServerEngine {
         /* Check for each line if it's longer or not, if longer then update 'width' */
         for (final String LINE : lines) {
             final int LENGTH = LINE.length();
-            if (LENGTH > width)
-                width = LENGTH;
+            if (LENGTH > width) width = LENGTH;
         }
 
         return width;
