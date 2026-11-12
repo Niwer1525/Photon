@@ -39,6 +39,7 @@ public class AdminCreatePostEndpoint implements IEndpoint {
             }
 
             final LocalDateTime PUBLISHED_AT = PAYLOAD.draft() ? null : (PAYLOAD.isScheduled() ? PAYLOAD.getScheduledAt() : LocalDateTime.now()); // If draft, published_at is null. If scheduled, use the provided date. Otherwise, use the current date and time.
+            Console.debug("Checking if the post is scheduled: scheduled_at = %s", PAYLOAD.getScheduledAt());
             final BlogPostStatus STATUS = PAYLOAD.draft() ? BlogPostStatus.DRAFT : (PAYLOAD.getScheduledAt() != null ? BlogPostStatus.SCHEDULED : BlogPostStatus.PUBLISHED); // Determine the status based on whether it's a draft, scheduled, or published.
 
             /* Sources */
@@ -133,8 +134,10 @@ public class AdminCreatePostEndpoint implements IEndpoint {
         public LocalDateTime getScheduledAt() {
             if (!isScheduled()) return null;
             try {
-                return LocalDate.parse(scheduled_at).atStartOfDay();
+                return LocalDateTime.parse(scheduled_at);
             } catch (Exception e) {
+                Console.log("Error while parsing scheduled date " + scheduled_at, e).error().container(PhotonEngine.LOGGER).type(PhotonLogTypes.WEB_SERVER).send();
+                e.printStackTrace();
                 return null;
             }
         }

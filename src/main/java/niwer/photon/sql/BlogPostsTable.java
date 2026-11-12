@@ -3,8 +3,10 @@ package niwer.photon.sql;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import niwer.lumen.Console;
 import niwer.photon.PhotonEngine;
 import niwer.photon.objects.ObjectBlogPost;
+import niwer.photon.util.PhotonLogTypes;
 import niwer.photon.util.TranslationManager.Language;
 import niwer.queryon.DataBase;
 import niwer.queryon.queries.Expressions;
@@ -34,6 +36,7 @@ public class BlogPostsTable extends Table {
     }
 
     public static void checkScheduledPosts() {
+        Console.log("Checking for scheduled posts to publish...").container(PhotonEngine.LOGGER).type(PhotonLogTypes.WEB_SERVER).send();
         UpdateManager.update(PhotonEngine.DATA_BASE, BlogPostsTable.class)
             .set("status", BlogPostStatus.PUBLISHED)
             .where(Expressions.and(
